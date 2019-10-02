@@ -1,6 +1,15 @@
 <ion-content>
   <div class="player"></div>
   <div class="map">
-    <div class="chunk"></div>
+    <div class="chunk">
+      <table>
+        <tr *ngFor="let row of chunk">
+          <td *ngFor="let cell of row">
+            <div *ngIf="cell" style="width: 100%; height: 100%; background-color: green"></div>
+            <div *ngIf="cell == false" style="width: 100%; height: 100%; background-color: cyan"></div>
+          </td>
+        </tr>
+      </table>
+    </div>
   </div>
 </ion-content>
