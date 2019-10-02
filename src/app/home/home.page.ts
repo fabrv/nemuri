@@ -18,7 +18,7 @@ export class HomePage {
       if (i % 3 == 0) {
         row += 1
       }
-      this.chunks[i] = {chunk: this.hashFunction((i % 3), row, this.seed, 0.5), position: {x: ((i % 3) - 1) * 1000, y: (row - 1) * 1000}}
+      this.chunks[i] = {chunk: this.hashFunction((i % 3), row, this.seed, 0.5), position: {x: ((i % 3) - 1) * (this.dimension * 50), y: (row - 1) * (this.dimension * 50)}}
     }
   }
 
@@ -88,25 +88,25 @@ export class HomePage {
     this.playerPos.y += y
     this.map.nativeElement.style.transform = `translateX(calc(-50% - ${this.playerPos.x}px)) translateY(calc(-50% + ${this.playerPos.y}px))`
     
-    const chunkPos = {x: Math.floor((this.playerPos.x + 500)/1000), y: (Math.floor((this.playerPos.y + 500)/1000)) * -1}
+    const chunkPos = {x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1}
     
     if (x != 0){
-      const filter = this.chunks.filter(chunk => chunk.position.x / 1000 !== chunkPos.x - (2 * Math.sign(x))) 
+      const filter = this.chunks.filter(chunk => chunk.position.x / (this.dimension * 50) !== chunkPos.x - (2 * Math.sign(x))) 
       if (this.chunks.length > filter.length) {
         this.chunks = filter
         
         for (let i = chunkPos.y - 1; i < chunkPos.y + 2; i++) {
-          this.chunks.push({chunk: this.hashFunction(chunkPos.x + 1 * Math.sign(x), i, this.seed, 0.5), position: {x: (chunkPos.x + 1 * Math.sign(x)) * 1000, y: i * 1000}})
+          this.chunks.push({chunk: this.hashFunction(chunkPos.x + 1 * Math.sign(x), i, this.seed, 0.5), position: {x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), y: i * (this.dimension * 50)}})
         }
       }
     }    
     if (y != 0) {
-      const filter = this.chunks.filter(chunk => chunk.position.y / 1000 !== chunkPos.y + (2 * Math.sign(y)))
+      const filter = this.chunks.filter(chunk => chunk.position.y / (this.dimension * 50) !== chunkPos.y + (2 * Math.sign(y)))
       if (this.chunks.length > filter.length) {
         this.chunks = filter
 
         for (let i = chunkPos.x - 1; i < chunkPos.x + 2; i++) {
-          this.chunks.push({chunk: this.hashFunction(i, chunkPos.y - 1 * Math.sign(y), this.seed, 0.5), position: {x: i * 1000, y: (chunkPos.y - 1 * Math.sign(y)) * 1000}})
+          this.chunks.push({chunk: this.hashFunction(i, chunkPos.y - 1 * Math.sign(y), this.seed, 0.5), position: {x: i * (this.dimension * 50), y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)}})
         }
       }
     }
