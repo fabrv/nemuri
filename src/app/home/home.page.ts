@@ -13,7 +13,8 @@ export class HomePage {
       if (i % 3 == 0) {
         row += 1
       }
-      this.chunks[i] = {chunk: this.hashFunction(0, 0, 4, 0.6), position: {x: ((i % 3) - 1) * 1000, y: (row - 1) * 1000}}
+      this.chunks[i] = {chunk: this.hashFunction((i % 3), row, 2, 0.5), position: {x: ((i % 3) - 1) * 1000, y: (row - 1) * 1000}}
+      console.log(i % 3, row)
       console.log(this.chunks[i].position)
     }
   }

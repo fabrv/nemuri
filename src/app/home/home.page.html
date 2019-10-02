@@ -1,14 +1,16 @@
 <ion-content>
   <div class="player"></div>
-  <div class="chunk" *ngFor="let chunk of chunks" [style.left.px] = 'chunk.position.x' [style.top.px] = 'chunk.position.y'>
-    <table>
-      <tr *ngFor="let row of chunk.chunk">
-        <td *ngFor="let cell of row">
-          <img src="../../assets/land.png" *ngIf="cell == 1" style="width: 100%; height: 100%;">
-          <img src="../../assets/water.png" *ngIf="cell == 0" style="width: 100%; height: 100%;">
-          <img src="../../assets/sand.png" *ngIf="cell == 2" style="width: 100%; height: 100%;">
-        </td>
-      </tr>
-    </table>
-  </div>  
+  <div class="map">
+    <div class="chunk" *ngFor="let chunk of chunks" [style.left.px]="chunk.position.x" [style.top.px]="chunk.position.y">
+      <table>
+        <tr *ngFor="let row of chunk.chunk">
+          <td *ngFor="let cell of row">
+            <img src="../../assets/land.png" *ngIf="cell == 1" style="width: 100%; height: 100%;">
+            <img src="../../assets/water.png" *ngIf="cell == 0" style="width: 100%; height: 100%;">
+            <img src="../../assets/sand.png" *ngIf="cell == 2" style="width: 100%; height: 100%;">
+          </td>
+        </tr>
+      </table>
+    </div>  
+  </div>
 </ion-content>

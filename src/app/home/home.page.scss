@@ -1,11 +1,18 @@
-.chunk {
-  table {
-    width: 1000px;
-    height: 1000px;
+.map {
+  .chunk {
+    table {
+      width: 1000px;
+      height: 1000px;
+    }
+    position: absolute;
+    transform: translateX(-50%) translateY(-50%);
   }
   position: fixed;
+  left: 50%;
+  top: 50%;
   transform: translateX(-50%) translateY(-50%);
 }
+
 .player {
   width: 40px;
   height: 40px;
@@ -15,5 +22,17 @@
   top: 50%;
   transform: translateX(-50%) translateY(-50%);
   background-color: white;
-  border-radius: 50%;
+  //border-radius: 50%;
+  animation-name: beat;
+  animation-duration: 4s;
+  animation-iteration-count: infinite;
+  z-index: 100;
+}
+
+@keyframes beat {
+  0%   {box-shadow: 0 0 15px 6px rgba(255, 255, 255, 1)}
+  25%  {box-shadow: 0 0 8px 6px rgba(255, 255, 255, .9)}
+  50%  {box-shadow: 0 0 5px 6px rgba(255, 255, 255, .7)}
+  75%  {box-shadow: 0 0 8px 6px rgba(255, 255, 255, .9)}
+  100% {box-shadow: 0 0 15px 6px rgba(255, 255, 255, 1)}
 }
