@@ -1,6 +1,19 @@
 .chunk {
   table {
-    width: 750px;
-    height: 750px;
+    width: 1000px;
+    height: 1000px;
   }
+  position: fixed;
+  transform: translateX(-50%) translateY(-50%);
+}
+.player {
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 1);
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  background-color: white;
+  border-radius: 50%;
 }
