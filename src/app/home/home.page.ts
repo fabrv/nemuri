@@ -18,7 +18,7 @@ export class HomePage {
       if (i % 3 == 0) {
         row += 1
       }
-      this.chunks[i] = {chunk: this.hashFunction((i % 3), row, this.seed, 0.5), position: {x: ((i % 3) - 1) * (this.dimension * 50), y: (row - 1) * (this.dimension * 50)}}
+      this.chunks[i] = {chunk: this.hashFunction((i % 3), row, this.seed, 0.2), position: {x: ((i % 3) - 1) * (this.dimension * 50), y: (row - 1) * (this.dimension * 50)}}
     }
   }
 
