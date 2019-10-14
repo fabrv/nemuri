@@ -114,48 +114,60 @@ export class HomePage {
   }
 
   move (x: number, y: number) {
-    this.playerPos.x += x
-    this.playerPos.y += y
-    this.map.nativeElement.style.transform = `translateX(calc(-50% - ${this.playerPos.x}px)) translateY(calc(-50% + ${this.playerPos.y}px))`
-    
-    const chunkPos = {x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1}
-    
-    if (x != 0){
-      const filter = this.chunks.filter(chunk => chunk.position.x / (this.dimension * 50) !== chunkPos.x - (2 * Math.sign(x))) 
-      if (this.chunks.length > filter.length) {
-        this.chunks = filter
-        
-        for (let i = chunkPos.y - 1; i < chunkPos.y + 2; i++) {
-          const rateX = Math.abs(chunkPos.x + 1 * Math.sign(x))
-          const rateY = Math.abs(i)
-          this.chunks.push({
-            chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), i, this.seed, this.mapRate(rateX, rateY)),
-            position: {
-              x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), 
-              y: i * (this.dimension * 50)
-            }
-          })
-        }
-      }
-    }    
-    if (y != 0) {
-      const filter = this.chunks.filter(chunk => chunk.position.y / (this.dimension * 50) !== chunkPos.y + (2 * Math.sign(y)))
-      if (this.chunks.length > filter.length) {
-        this.chunks = filter
 
-        for (let i = chunkPos.x - 1; i < chunkPos.x + 2; i++) {
-          const rateX = Math.abs(i)
-          const rateY = Math.abs(chunkPos.y - 1 * Math.sign(y))
-
-          this.chunks.push({
-            chunk: this.hashFunction(i, this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, this.mapRate(rateX, rateY)), 
-            position: {
-              x: i * (this.dimension * 50), 
-              y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)
-            }
-          })
-        }
-      }
+    const chunkPos = {
+      x: Math.floor((this.playerPos.x + x + (this.dimension * 25))/(this.dimension * 50)), 
+      y: (Math.floor((this.playerPos.y + y + (this.dimension * 25))/(this.dimension * 50))) * -1
     }
+    const blockPos = {
+      x: this.mod((this.playerPos.x + x) / 50 + 7, 15), 
+      y: 14 - this.mod((this.playerPos.y + y) / 50 + 7, 15) 
+    }
+    
+    const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
+
+    if (currentChunk.chunk[blockPos.y][blockPos.x] !== 0) {
+      this.playerPos.x += x
+      this.playerPos.y += y
+      this.map.nativeElement.style.transform = `translateX(calc(-50% - ${this.playerPos.x}px)) translateY(calc(-50% + ${this.playerPos.y}px))`    
+
+      if (x != 0){
+        const filter = this.chunks.filter(chunk => chunk.position.x / (this.dimension * 50) !== chunkPos.x - (2 * Math.sign(x))) 
+        if (this.chunks.length > filter.length) {
+          this.chunks = filter
+          
+          for (let i = chunkPos.y - 1; i < chunkPos.y + 2; i++) {
+            const rateX = Math.abs(chunkPos.x + 1 * Math.sign(x))
+            const rateY = Math.abs(i)
+            this.chunks.push({
+              chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), i, this.seed, this.mapRate(rateX, rateY)),
+              position: {
+                x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), 
+                y: i * (this.dimension * 50)
+              }
+            })
+          }
+        }
+      }    
+      if (y != 0) {
+        const filter = this.chunks.filter(chunk => chunk.position.y / (this.dimension * 50) !== chunkPos.y + (2 * Math.sign(y)))
+        if (this.chunks.length > filter.length) {
+          this.chunks = filter
+
+          for (let i = chunkPos.x - 1; i < chunkPos.x + 2; i++) {
+            const rateX = Math.abs(i)
+            const rateY = Math.abs(chunkPos.y - 1 * Math.sign(y))
+
+            this.chunks.push({
+              chunk: this.hashFunction(i, this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, this.mapRate(rateX, rateY)), 
+              position: {
+                x: i * (this.dimension * 50), 
+                y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)
+              }
+            })
+          }
+        }
+      }
+    } 
   }
 }
