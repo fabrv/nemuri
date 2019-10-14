@@ -1,10 +1,10 @@
 <ion-content>
   <div class="controls">
-    <div id="up" (click)="holdPress(0, 50)"></div>
-    <div id="down" (click)="move(0, -50)"></div>
+    <div id="up" (tap)="move(0, 50);" (press)="timerRun(true, 0, 50);" (pressup)="timerRun(false);"></div>
+    <div id="down" (click)="move(0, -50)" (press)="timerRun(true, 0, -50);" (pressup)="timerRun(false);"></div>
     <div id="click"></div>
-    <div id="left" (click)="move(-50, 0)"></div>
-    <div id="right" (click)="move(50, 0)"></div>
+    <div id="left" (click)="move(-50, 0)" (press)="timerRun(true, -50, 0);" (pressup)="timerRun(false);"></div>
+    <div id="right" (click)="move(50, 0)" (press)="timerRun(true, 50, 0);" (pressup)="timerRun(false);"></div>
   </div>
   <div class="player"></div>
   <div id="map" #map>

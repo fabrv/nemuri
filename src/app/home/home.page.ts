@@ -1,6 +1,8 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { ScreenOrientation } from '@ionic-native/screen-orientation/ngx';
 
+import { TaskTimer, Task } from 'tasktimer'
+
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
@@ -13,6 +15,8 @@ export class HomePage {
   seed:number = 5
   dimension: number = 15
   pressed: boolean = false
+
+  timer = new TaskTimer(200)
 
   constructor(private screenOrientation: ScreenOrientation) {
     this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.PORTRAIT)
@@ -35,8 +39,9 @@ export class HomePage {
     }
   }
 
-  holdPress(x: number, y: number) {
-    this.move(x, y)
+  timerRun(start: boolean, x: number = 0, y: number = 0) {
+    if (start) { this.timer.add(task => this.move(x, y)).start(); }
+    else { this.timer.reset() }
   }
 
   hashFunction(x: number, y: number, seed: number, biome: number): Array<Array<number>> {
