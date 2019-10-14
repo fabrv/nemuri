@@ -12,7 +12,7 @@ export class HomePage {
   @ViewChild('map', {static: false}) map: ElementRef
   chunks: Array<{chunk: Array<Array<number>>, position: {x: number, y: number}}> = []
   playerPos: {x: number, y: number} = {x: 0, y: 0}
-  seed:number = 5
+  seed:number = 2
   dimension: number = 15
   pressed: boolean = false
 
@@ -55,7 +55,7 @@ export class HomePage {
       chunk.push(row)
     }
 
-    chunk = this.sandChunk(this.softenChunk(chunk))
+    chunk = this.treeChunk(this.sandChunk(this.softenChunk(chunk)))
     return chunk
   }
 
@@ -88,7 +88,7 @@ export class HomePage {
           if (chunk[i][o - 1] == 1) sides += 1
           if (chunk[i][o + 1] == 1) sides += 1
           if (chunk[i - 1][o] == 1) sides += 1
-          if (chunk[i + 1][o] == 1) sides += 1          
+          if (chunk[i + 1][o] == 1) sides += 1
 
           if (sides > 0 && dummyChunk[i][o] == 0) {
             dummyChunk[i][o] = 2
@@ -98,6 +98,32 @@ export class HomePage {
     }
 
     return dummyChunk
+  }
+
+  treeChunk (chunk: Array<Array<number>>): Array<Array<number>> {
+    for (let i = 0; i < this.dimension; i++) {
+      for (let o = 0; o < this.dimension; o++) {
+        if (i > 0 && o > 0 && i < this.dimension - 1 && o < this.dimension - 1) {
+          let row = -1
+          let sides = 0
+
+          for (let n = 0; n < 9; n++) {
+            if (n % 3 == 0) {
+              row += 1
+            }
+                        
+            if (chunk[i + (row - 1)][o + ((n % 3) - 1)] == 1 || chunk[i + (row - 1)][o + ((n % 3) - 1)] == 3) {
+              sides += 1
+            }
+
+            if (sides > 8 && (i != 7 || o != 7)) {
+              chunk[i][o] = 3
+            }
+          }
+        }
+      }
+    }
+    return chunk
   }
 
   random(seed: number) {
@@ -110,7 +136,7 @@ export class HomePage {
   }
 
   mapRate(x: number, y: number) {
-    return Math.abs(Math.sin(Math.PI * Math.max(x, y) / 30))
+    return Math.abs(Math.sin(Math.PI * Math.max(x + 0.5, y + 0.5) / 30))
   }
 
   move (x: number, y: number) {
@@ -125,8 +151,7 @@ export class HomePage {
     }
     
     const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
-
-    if (currentChunk.chunk[blockPos.y][blockPos.x] !== 0) {
+    if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 2) {
       this.playerPos.x += x
       this.playerPos.y += y
       this.map.nativeElement.style.transform = `translateX(calc(-50% - ${this.playerPos.x}px)) translateY(calc(-50% + ${this.playerPos.y}px))`    
