@@ -1,11 +1,12 @@
 <ion-content>
   <div class="controls">
-    <div id="up" (press)="holdPress(0, 50)"></div>
+    <div id="up" (click)="holdPress(0, 50)"></div>
     <div id="down" (click)="move(0, -50)"></div>
+    <div id="click"></div>
     <div id="left" (click)="move(-50, 0)"></div>
     <div id="right" (click)="move(50, 0)"></div>
   </div>
-  <!--<div class="player"></div>-->
+  <div class="player"></div>
   <div id="map" #map>
     <div class="chunk" *ngFor="let chunk of chunks" [style.left.px]="chunk.position.x" [style.top.px]="chunk.position.y">
       <table>

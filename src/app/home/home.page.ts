@@ -1,4 +1,5 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
+import { ScreenOrientation } from '@ionic-native/screen-orientation/ngx';
 
 @Component({
   selector: 'app-home',
@@ -13,13 +14,14 @@ export class HomePage {
   dimension: number = 15
   pressed: boolean = false
 
-  constructor() {
+  constructor(private screenOrientation: ScreenOrientation) {
+    this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.PORTRAIT)
+
     let row = -1
     for (let i = 0; i < 9; i++) {
       if (i % 3 == 0) {
         row += 1
       }
-      console.log((i % 3) - 1, row - 1)
       const rateX = Math.abs((i % 3) - 1)
       const rateY = Math.abs(row - 1)
       const newChunk = {
@@ -112,7 +114,6 @@ export class HomePage {
     this.map.nativeElement.style.transform = `translateX(calc(-50% - ${this.playerPos.x}px)) translateY(calc(-50% + ${this.playerPos.y}px))`
     
     const chunkPos = {x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1}
-    console.log(chunkPos)
     
     if (x != 0){
       const filter = this.chunks.filter(chunk => chunk.position.x / (this.dimension * 50) !== chunkPos.x - (2 * Math.sign(x))) 
@@ -122,7 +123,13 @@ export class HomePage {
         for (let i = chunkPos.y - 1; i < chunkPos.y + 2; i++) {
           const rateX = Math.abs(chunkPos.x + 1 * Math.sign(x))
           const rateY = Math.abs(i)
-          this.chunks.push({chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), i, this.seed, this.mapRate(rateX, rateY)), position: {x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), y: i * (this.dimension * 50)}})
+          this.chunks.push({
+            chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), i, this.seed, this.mapRate(rateX, rateY)),
+            position: {
+              x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), 
+              y: i * (this.dimension * 50)
+            }
+          })
         }
       }
     }    
@@ -132,7 +139,16 @@ export class HomePage {
         this.chunks = filter
 
         for (let i = chunkPos.x - 1; i < chunkPos.x + 2; i++) {
-          this.chunks.push({chunk: this.hashFunction(i, this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, Math.abs(Math.sin(Math.PI * Math.max(Math.abs(i), Math.abs(chunkPos.y - 1 * Math.sign(y))) / 10))), position: {x: i * (this.dimension * 50), y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)}})
+          const rateX = Math.abs(i)
+          const rateY = Math.abs(chunkPos.y - 1 * Math.sign(y))
+
+          this.chunks.push({
+            chunk: this.hashFunction(i, this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, this.mapRate(rateX, rateY)), 
+            position: {
+              x: i * (this.dimension * 50), 
+              y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)
+            }
+          })
         }
       }
     }
