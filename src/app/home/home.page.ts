@@ -9,8 +9,9 @@ export class HomePage {
   @ViewChild('map', {static: false}) map: ElementRef
   chunks: Array<{chunk: Array<Array<number>>, position: {x: number, y: number}}> = []
   playerPos: {x: number, y: number} = {x: 0, y: 0}
-  seed:number = 2
+  seed:number = 5
   dimension: number = 15
+  pressed: boolean = false
 
   constructor() {
     let row = -1
@@ -18,8 +19,12 @@ export class HomePage {
       if (i % 3 == 0) {
         row += 1
       }
-      this.chunks[i] = {chunk: this.hashFunction((i % 3), row, this.seed, 0.2), position: {x: ((i % 3) - 1) * (this.dimension * 50), y: (row - 1) * (this.dimension * 50)}}
+      this.chunks[i] = {chunk: this.hashFunction((i % 3), row, this.seed, this.mod(this.mod(i, 3) + row, 9) / 10), position: {x: ((i % 3) - 1) * (this.dimension * 50), y: (row - 1) * (this.dimension * 50)}}
     }
+  }
+
+  holdPress(x: number, y: number) {
+    this.move(x, y)
   }
 
   hashFunction(x: number, y: number, seed: number, biome: number): Array<Array<number>> {
@@ -83,12 +88,17 @@ export class HomePage {
     return x - Math.floor(x);
   }
 
+  mod(n: number, m: number) {
+    return ((n % m) + m) % m;
+  }
+
   move (x: number, y: number) {
     this.playerPos.x += x
     this.playerPos.y += y
     this.map.nativeElement.style.transform = `translateX(calc(-50% - ${this.playerPos.x}px)) translateY(calc(-50% + ${this.playerPos.y}px))`
     
     const chunkPos = {x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1}
+    console.log(chunkPos)
     
     if (x != 0){
       const filter = this.chunks.filter(chunk => chunk.position.x / (this.dimension * 50) !== chunkPos.x - (2 * Math.sign(x))) 
@@ -96,7 +106,7 @@ export class HomePage {
         this.chunks = filter
         
         for (let i = chunkPos.y - 1; i < chunkPos.y + 2; i++) {
-          this.chunks.push({chunk: this.hashFunction(chunkPos.x + 1 * Math.sign(x), i, this.seed, 0.5), position: {x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), y: i * (this.dimension * 50)}})
+          this.chunks.push({chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), i, this.seed, this.mod(this.mod(chunkPos.x + 1 * Math.sign(x), 255) + i, 9) / 10), position: {x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), y: i * (this.dimension * 50)}})
         }
       }
     }    
@@ -106,7 +116,7 @@ export class HomePage {
         this.chunks = filter
 
         for (let i = chunkPos.x - 1; i < chunkPos.x + 2; i++) {
-          this.chunks.push({chunk: this.hashFunction(i, chunkPos.y - 1 * Math.sign(y), this.seed, 0.5), position: {x: i * (this.dimension * 50), y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)}})
+          this.chunks.push({chunk: this.hashFunction(i, this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, this.mod(i + this.mod(chunkPos.y - 1 * Math.sign(y), 255), 9) / 10), position: {x: i * (this.dimension * 50), y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)}})
         }
       }
     }
