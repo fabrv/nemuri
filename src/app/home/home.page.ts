@@ -19,7 +19,17 @@ export class HomePage {
       if (i % 3 == 0) {
         row += 1
       }
-      this.chunks[i] = {chunk: this.hashFunction((i % 3), row, this.seed, this.mod(this.mod(i, 3) + row, 9) / 10), position: {x: ((i % 3) - 1) * (this.dimension * 50), y: (row - 1) * (this.dimension * 50)}}
+      console.log((i % 3) - 1, row - 1)
+      const rateX = Math.abs((i % 3) - 1)
+      const rateY = Math.abs(row - 1)
+      const newChunk = {
+        chunk: this.hashFunction((i % 3) - 1, row - 1, this.seed, this.mapRate(rateX, rateY)), 
+        position: {
+          x: ((i % 3) - 1) * (this.dimension * 50), 
+          y: (row - 1) * (this.dimension * 50)
+        }
+      }
+      this.chunks[i] = newChunk
     }
   }
 
@@ -92,6 +102,10 @@ export class HomePage {
     return ((n % m) + m) % m;
   }
 
+  mapRate(x: number, y: number) {
+    return Math.abs(Math.sin(Math.PI * Math.max(x, y) / 30))
+  }
+
   move (x: number, y: number) {
     this.playerPos.x += x
     this.playerPos.y += y
@@ -106,7 +120,9 @@ export class HomePage {
         this.chunks = filter
         
         for (let i = chunkPos.y - 1; i < chunkPos.y + 2; i++) {
-          this.chunks.push({chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), i, this.seed, this.mod(this.mod(chunkPos.x + 1 * Math.sign(x), 255) + i, 9) / 10), position: {x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), y: i * (this.dimension * 50)}})
+          const rateX = Math.abs(chunkPos.x + 1 * Math.sign(x))
+          const rateY = Math.abs(i)
+          this.chunks.push({chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), i, this.seed, this.mapRate(rateX, rateY)), position: {x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), y: i * (this.dimension * 50)}})
         }
       }
     }    
@@ -116,7 +132,7 @@ export class HomePage {
         this.chunks = filter
 
         for (let i = chunkPos.x - 1; i < chunkPos.x + 2; i++) {
-          this.chunks.push({chunk: this.hashFunction(i, this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, this.mod(i + this.mod(chunkPos.y - 1 * Math.sign(y), 255), 9) / 10), position: {x: i * (this.dimension * 50), y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)}})
+          this.chunks.push({chunk: this.hashFunction(i, this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, Math.abs(Math.sin(Math.PI * Math.max(Math.abs(i), Math.abs(chunkPos.y - 1 * Math.sign(y))) / 10))), position: {x: i * (this.dimension * 50), y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)}})
         }
       }
     }
