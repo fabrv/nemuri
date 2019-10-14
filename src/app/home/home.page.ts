@@ -28,8 +28,9 @@ export class HomePage {
       }
       const rateX = Math.abs((i % 3) - 1)
       const rateY = Math.abs(row - 1)
+      
       const newChunk = {
-        chunk: this.hashFunction((i % 3) - 1, row - 1, this.seed, this.mapRate(rateX, rateY)), 
+        chunk: this.hashFunction(this.mod((i % 3) - 1, 255), this.mod(row - 1, 255), this.seed, this.mapRate(rateX, rateY)), 
         position: {
           x: ((i % 3) - 1) * (this.dimension * 50), 
           y: (row - 1) * (this.dimension * 50)
@@ -149,7 +150,8 @@ export class HomePage {
       x: this.mod((this.playerPos.x + x) / 50 + 7, 15), 
       y: 14 - this.mod((this.playerPos.y + y) / 50 + 7, 15) 
     }
-    
+
+    //Collision
     const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
     if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 2) {
       this.playerPos.x += x
@@ -165,7 +167,7 @@ export class HomePage {
             const rateX = Math.abs(chunkPos.x + 1 * Math.sign(x))
             const rateY = Math.abs(i)
             this.chunks.push({
-              chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), i, this.seed, this.mapRate(rateX, rateY)),
+              chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), this.mod(i, 255), this.seed, this.mapRate(rateX, rateY)),
               position: {
                 x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), 
                 y: i * (this.dimension * 50)
@@ -184,7 +186,7 @@ export class HomePage {
             const rateY = Math.abs(chunkPos.y - 1 * Math.sign(y))
 
             this.chunks.push({
-              chunk: this.hashFunction(i, this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, this.mapRate(rateX, rateY)), 
+              chunk: this.hashFunction(this.mod(i, 255), this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, this.mapRate(rateX, rateY)), 
               position: {
                 x: i * (this.dimension * 50), 
                 y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)
