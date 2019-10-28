@@ -16,6 +16,8 @@ export class HomePage {
   dimension: number = 15
   pressed: boolean = false
 
+  fly = false
+
   timer = new TaskTimer(200)
 
   constructor(private screenOrientation: ScreenOrientation) {
@@ -140,6 +142,15 @@ export class HomePage {
     return Math.abs(Math.sin(Math.PI * Math.max(x + 0.5, y + 0.5) / 30))
   }
 
+  flyStyle() {
+    console.log(this.fly)
+    if (this.fly) {
+      document.getElementById('player').classList.add('fly')
+    } else {
+      document.getElementById('player').classList.remove('fly')
+    }
+  }
+
   move (x: number, y: number) {
 
     const chunkPos = {
@@ -153,7 +164,7 @@ export class HomePage {
 
     //Collision
     const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
-    if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 2) {
+    if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 2 || this.fly) {
       this.playerPos.x += x
       this.playerPos.y += y
       this.map.nativeElement.style.transform = `translateX(calc(-50% - ${this.playerPos.x}px)) translateY(calc(-50% + ${this.playerPos.y}px))`    

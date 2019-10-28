@@ -29,13 +29,19 @@ $control-font-size: 40px;
 .player {
   width: 40px;
   height: 40px;
-  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 1);
+  box-shadow: -6px 0 2px 1px rgba(0, 0, 0, 0.3);
   position: fixed;
   left: 50%;
   top: 50%;
-  transform: translateX(-50%) translateY(-50%);
+  transform: translateX(calc(-50% + 6px)) translateY(calc(-50% - 2px));
   background-color: white;
   z-index: 100;
+  transition: all .2s;
+}
+
+.fly {
+  box-shadow: -9px 0 2px 2px rgba(0, 0, 0, 0.3) !important;
+  transform: translateX(calc(-50% + 9px)) translateY(calc(-50% - 2px));
 }
 
 #move-controls {
@@ -138,6 +144,6 @@ $control-font-size: 40px;
   }
 
   div:hover {
-    box-shadow: -2px 2px 2px 2px rgba(0,0,0,0.5);
+    box-shadow: -2px 0 2px 2px rgba(0,0,0,0.5);
   }
 }
