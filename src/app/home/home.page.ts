@@ -69,10 +69,11 @@ export class HomePage {
       frames = (frames + 1) % 15
       if (frames == 0) {
         context.clearRect(0, 0, canvas.width, canvas.height)
-        drawFrame(standIndex)
+        drawFrame(standCycle[standIndex])
         standIndex = (standIndex + 1) % standCycle.length
       }
       window.requestAnimationFrame(standStep)
+      return
     }
 
     const drawFrame = (frame: number) => {
@@ -88,10 +89,6 @@ export class HomePage {
         tileSize.height
       )
     }
-  }
-
-  moveMainCharacter () {
-    
   }
 
   drawMap () {
