@@ -3,8 +3,8 @@ ion-content{
   --ion-background-color:gray;
 }
 canvas {  
-  width: 1250px;
-  height: 1250px;
+  width: 1750px;
+  height: 1750px;
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
   image-rendering: pixelated;
@@ -38,9 +38,13 @@ canvas {
   transition: all .2s;
 }
 
+.player-inverted {
+  transform: translateX(calc(-50% + 6px)) translateY(calc(-50% - 20px)) scaleX(-1);
+}
+
 .fly {
-  box-shadow: -9px 0 2px 2px rgba(0, 0, 0, 0.3) !important;
-  transform: translateX(calc(-50% + 9px)) translateY(calc(-50% - 2px));
+  //box-shadow: -9px 0 2px 2px rgba(0, 0, 0, 0.3) !important;
+  transform: translateX(calc(-50% + 8px)) translateY(calc(-50% - 25px));
 }
 
 #move-controls {

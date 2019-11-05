@@ -13,8 +13,10 @@ export class HomePage {
   chunks: Array<{chunk: Array<Array<number>>, position: {x: number, y: number}}> = []
   playerPos: {x: number, y: number} = {x: 0, y: 0}
   seed:number = 5
-  dimension: number = 25
+  dimension: number = 35
   pressed: boolean = false
+
+  //component
 
   fly = false
 
@@ -40,6 +42,26 @@ export class HomePage {
       }
       this.chunks[i] = newChunk
     }
+
+    window.addEventListener('keydown', (event)=> {
+      switch (event.keyCode) {
+        case 87:
+          this.move(0, 50)
+        break
+        case 65:
+          this.move(-50, 0)
+        break
+        case 83:
+          this.move(0, -50)
+        break
+        case 68:
+          this.move(50, 0)
+        break  
+        case 37:
+
+      }
+      console.log(event.keyCode)
+    })
   }
 
   ngAfterViewInit() {
@@ -66,12 +88,19 @@ export class HomePage {
     }
 
     const standStep = () => {
-      frames = (frames + 1) % 15
+      frames = (frames + 1) % 15      
+
       if (frames == 0) {
         context.clearRect(0, 0, canvas.width, canvas.height)
-        drawFrame(standCycle[standIndex])
+        if (this.fly) {
+          drawFrame(8)
+        } else {
+          drawFrame(standCycle[standIndex])
+        }
+        
         standIndex = (standIndex + 1) % standCycle.length
       }
+      
       window.requestAnimationFrame(standStep)
       return
     }
@@ -294,7 +323,11 @@ export class HomePage {
   }
 
   move (x: number, y: number) {
-
+    if (x > 0) {
+      document.getElementById('player').classList.remove('player-inverted')
+    } else if (x < 0) {
+      document.getElementById('player').classList.add('player-inverted')
+    }
     const chunkPos = {
       x: Math.floor((this.playerPos.x + x + (this.dimension * 25))/(this.dimension * 50)), 
       y: (Math.floor((this.playerPos.y + y + (this.dimension * 25))/(this.dimension * 50))) * -1
