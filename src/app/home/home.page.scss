@@ -10,6 +10,23 @@ canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
+
+#components {
+  width: 1000px;
+  height: 1000px;
+  border: solid 1px white;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+
+  z-index: 50;
+}
+
 #map {
   .chunk {
     position: absolute;

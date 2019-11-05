@@ -16,15 +16,67 @@ export class HomePage {
   dimension: number = 35
   pressed: boolean = false
 
-  //component
+  frameSpeed: number = 30
+
+  componentsToDraw: Array<any> = []
+
+  component = function (x: number, 
+                        y: number,
+                        spriteX: number,
+                        spriteY: number,                        
+                        width: number,
+                        height: number,
+                        context: CanvasRenderingContext2D) {
+
+    this.sX = spriteX
+    this.sY = spriteY
+    this.width = width
+    this.height = height
+    this.src = '../../assets/chars_tileset.png'
+    
+    this.context = context
+
+    this.location = {x: x, y: y}
+
+    const image = new Image()
+    image.src = this.src
+
+    this.init = () => {
+      image.onload = () => {
+        this.context.drawImage(
+          image, 
+          this.sX, 
+          this.sY, 
+          this.width, 
+          this.height, 
+          this.location.x,
+          this.location.y, 
+          width, 
+          height
+        )
+      }
+    }
+  }
+
+  drawLoop () {
+    const canvas: any = document.getElementById('components')
+    const context: CanvasRenderingContext2D = canvas.getContext('2d')
+
+    const draw = () => {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      for (let components in this.componentsToDraw) {
+        this.componentsToDraw[components].init()
+      }
+    }
+
+    setInterval(draw, this.frameSpeed);
+  }
 
   fly = false
 
   timer = new TaskTimer(200)
 
   constructor(private screenOrientation: ScreenOrientation) {
-    //this.drawMap()
-
     let row = -1
     for (let i = 0; i < 9; i++) {
       if (i % 3 == 0) {
@@ -57,8 +109,10 @@ export class HomePage {
         case 68:
           this.move(50, 0)
         break  
-        case 37:
-
+        case 32:
+          this.fly = !this.fly; 
+          this.flyStyle();
+        break
       }
       console.log(event.keyCode)
     })
@@ -67,7 +121,35 @@ export class HomePage {
   ngAfterViewInit() {
     this.drawMap()
     this.drawMainCharacter()
+    this.drawLoop()
     this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE)
+  }
+
+  throwDagger (x: number, y: number) {
+    const canvas: any = document.getElementById('components')
+    const context: CanvasRenderingContext2D = canvas.getContext('2d')
+
+    const dagger = new this.component(160, 160, 293, 18, 6, 13, context)
+    dagger.move = () => {
+      let frame = 0
+      let dx = x
+      let dy = y
+      let intervalID
+      const changeLocation = () => {
+        dagger.location.x += dx
+        dagger.location.y += dy
+
+        frame += 1
+        if (frame > 3) {
+          clearInterval(intervalID)
+        }
+        //console.log(dagger.location.x)
+      }      
+      
+      intervalID = setInterval(changeLocation, this.frameSpeed);
+    }
+    dagger.move()
+    this.componentsToDraw.push(dagger)
   }
 
   drawMainCharacter () {
