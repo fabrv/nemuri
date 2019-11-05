@@ -44,24 +44,42 @@ export class HomePage {
 
   ngAfterViewInit() {
     this.drawMap()
-    this.drawCharacter()
+    this.drawMainCharacter()
     this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE)
   }
 
-  drawCharacter () {
+  drawMainCharacter () {
     const charSprite = new Image()
     const canvas: any = document.getElementById('player')
     const context = canvas.getContext('2d')
     const tileSize = {height: 24, width: 16}
-    charSprite.src = '../../main_char.png'
 
-    console.log(canvas, charSprite)
+    const standCycle = [0, 1]
+    let standIndex = 0
+
+    let frames = 0
+
+    charSprite.src = '../../assets/chars_tileset.png'
 
     charSprite.onload = () => {
+      window.requestAnimationFrame(standStep)
+    }
+
+    const standStep = () => {
+      frames = (frames + 1) % 15
+      if (frames == 0) {
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        drawFrame(standIndex)
+        standIndex = (standIndex + 1) % standCycle.length
+      }
+      window.requestAnimationFrame(standStep)
+    }
+
+    const drawFrame = (frame: number) => {
       context.drawImage(
         charSprite, 
-        0, 
-        0, 
+        128 + tileSize.width * frame, 
+        41, 
         tileSize.width, 
         tileSize.height, 
         0,
@@ -70,6 +88,10 @@ export class HomePage {
         tileSize.height
       )
     }
+  }
+
+  moveMainCharacter () {
+    
   }
 
   drawMap () {
