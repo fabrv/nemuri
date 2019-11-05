@@ -12,8 +12,8 @@ export class HomePage {
   @ViewChild('map', {static: false}) map: ElementRef
   chunks: Array<{chunk: Array<Array<number>>, position: {x: number, y: number}}> = []
   playerPos: {x: number, y: number} = {x: 0, y: 0}
-  seed:number = 2
-  dimension: number = 15
+  seed:number = 5
+  dimension: number = 25
   pressed: boolean = false
 
   fly = false
@@ -21,7 +21,7 @@ export class HomePage {
   timer = new TaskTimer(200)
 
   constructor(private screenOrientation: ScreenOrientation) {
-    this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.PORTRAIT)
+    //this.drawMap()
 
     let row = -1
     for (let i = 0; i < 9; i++) {
@@ -39,6 +39,80 @@ export class HomePage {
         }
       }
       this.chunks[i] = newChunk
+    }
+  }
+
+  ngAfterViewInit() {
+    this.drawMap()
+    this.drawCharacter()
+    this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE)
+  }
+
+  drawCharacter () {
+    const charSprite = new Image()
+    const canvas: any = document.getElementById('player')
+    const context = canvas.getContext('2d')
+    const tileSize = {height: 24, width: 16}
+    charSprite.src = '../../main_char.png'
+
+    console.log(canvas, charSprite)
+
+    charSprite.onload = () => {
+      context.drawImage(
+        charSprite, 
+        0, 
+        0, 
+        tileSize.width, 
+        tileSize.height, 
+        0,
+        0, 
+        tileSize.width, 
+        tileSize.height
+      )
+    }
+  }
+
+  drawMap () {
+    for (let chunk in this.chunks) {
+      this.drawChunk(`canvas${this.chunks[chunk].position.x}${this.chunks[chunk].position.y}`, this.chunks[chunk].chunk)
+    }
+  }
+
+  drawChunk(canvasId: string, map: any) {
+    const mapSprite = new Image()
+    const canvas: any = document.getElementById(canvasId)
+    const context = canvas.getContext('2d')
+    const tileSize = 16
+
+    const dict = [
+      {x: 1, y: 5},
+      {x: 0, y: 0},
+      {x: 0, y: 4},{x: 1, y: 4},{x: 2, y: 4},
+      {x: 0, y: 5}             ,{x: 2, y: 5},
+      {x: 0, y: 6},{x: 1, y: 6},{x: 2, y: 6},
+      {x: 0, y: 7},{x: 1, y: 7},
+      {x: 0, y: 8},{x: 1, y: 8},
+      {x: 11, y: 7}      
+    ]
+
+    mapSprite.src = `../../assets/overworld_tileset_grass.png`
+
+    mapSprite.onload = () => {
+      for (let r = 0; r < map.length; r++) {
+        for (let c = 0; c < map[r].length; c++) {
+          context.drawImage(
+            mapSprite, 
+            dict[map[r][c]].x * tileSize, 
+            dict[map[r][c]].y * tileSize, 
+            tileSize, 
+            tileSize, 
+            c * tileSize,
+            r * tileSize, 
+            tileSize, 
+            tileSize
+          )
+        }
+      }
     }
   }
 
@@ -76,31 +150,78 @@ export class HomePage {
             chunk[i][o] = 0
           }
         }
+      }      
+    }
+
+    for (let i = 0; i < this.dimension; i++) {
+      for (let o = 0; o < this.dimension; o++) {
+        try {
+          if (chunk[i][o] == 0) {
+            if ((chunk[i + 1][o] == 1 && chunk[i - 1][o] == 1) || (chunk[i][o + 1] == 1 && chunk[i][o - 1] == 1)) {
+              chunk[i][o + 1] = 0
+              chunk[i + 1][o + 1] = 0
+              chunk[i + 1][o] = 0
+
+              if (chunk[i + 2][o + 1] == 0) chunk[i + 2][o] = 0
+              if (chunk[i + 1][o + 2] == 0) chunk[i + 2][o] = 0
+            }
+          }
+        } catch (error) {}
       }
-    }  
+    }
+
 
     return chunk
   }
 
   sandChunk (chunk: Array<Array<number>>): Array<Array<number>> {
-    let dummyChunk = chunk.slice(0, chunk.length)
-    for (let i = 0; i < this.dimension; i++) {
-      for (let o = 0; o < this.dimension; o++) {
-        if (i > 0 && o > 0 && i < this.dimension - 1 && o < this.dimension - 1) {
-          let sides = 0
-          if (chunk[i][o - 1] == 1) sides += 1
-          if (chunk[i][o + 1] == 1) sides += 1
-          if (chunk[i - 1][o] == 1) sides += 1
-          if (chunk[i + 1][o] == 1) sides += 1
-
-          if (sides > 0 && dummyChunk[i][o] == 0) {
-            dummyChunk[i][o] = 2
+    for (let r = 0; r < chunk.length; r++) {
+      for (let c = 0; c < chunk.length; c++) {
+        if (chunk[r][c] === 0) {
+          try {
+            if ((chunk[r - 1][c] === 1 || chunk[r - 1][c] > 14) && (chunk[r][c + 1] === 1 || chunk[r][c + 1] > 14)) {
+              chunk[r][c] = 4
+            }
+            else if ((chunk[r - 1][c] === 1 || chunk[r - 1][c] > 14) && (chunk[r][c - 1] === 1 || chunk[r][c - 1] > 14)) {
+              chunk[r][c] = 2
+            } else if ((chunk[r + 1][c] === 1 || chunk[r + 1][c] > 14) && (chunk[r][c - 1] === 1 || chunk[r][c - 1] > 14)) {
+              chunk[r][c] = 7
+            }
+            else if ((chunk[r + 1][c] === 1 || chunk[r + 1][c] > 14) && (chunk[r][c + 1] === 1 || chunk[r][c + 1] > 14)) {
+              chunk[r][c] = 9
+            }
+            else if (chunk[r - 1][c] === 1) {
+              chunk[r][c] = 3
+            }
+            else if (chunk[r + 1][c] === 1) {
+              chunk[r][c] = 8
+            }
+            else if (chunk[r][c - 1] === 1) {
+              chunk[r][c] = 5
+            }
+            else if (chunk[r][c + 1] === 1) {
+              chunk[r][c] = 6
+            }
+            else if (chunk[r - 1][c - 1] === 1) {
+              chunk[r][c] = 13
+            }
+            else if (chunk[r - 1][c + 1] === 1) {
+              chunk[r][c] = 12
+            }
+            else if (chunk[r + 1][c - 1] === 1) {
+              chunk[r][c] = 11
+            }
+            else if (chunk[r + 1][c + 1] === 1) {
+              chunk[r][c] = 10
+            }
+          } catch (error) {
+            
           }
         }
       }
     }
 
-    return dummyChunk
+    return chunk
   }
 
   treeChunk (chunk: Array<Array<number>>): Array<Array<number>> {
@@ -115,12 +236,12 @@ export class HomePage {
               row += 1
             }
                         
-            if (chunk[i + (row - 1)][o + ((n % 3) - 1)] == 1 || chunk[i + (row - 1)][o + ((n % 3) - 1)] == 3) {
+            if (chunk[i + (row - 1)][o + ((n % 3) - 1)] == 1 || chunk[i + (row - 1)][o + ((n % 3) - 1)] == 14) {
               sides += 1
             }
 
-            if (sides > 8 && (i != 7 || o != 7)) {
-              chunk[i][o] = 3
+            if (sides > 8 && (i != Math.floor(this.dimension / 2) || o != Math.floor(this.dimension / 2))) {
+              chunk[i][o] = 14
             }
           }
         }
@@ -128,6 +249,8 @@ export class HomePage {
     }
     return chunk
   }
+
+  //finalRunChunk (chunk: Array<)
 
   random(seed: number) {
     var x = Math.sin(seed++) * 10000;
@@ -158,13 +281,14 @@ export class HomePage {
       y: (Math.floor((this.playerPos.y + y + (this.dimension * 25))/(this.dimension * 50))) * -1
     }
     const blockPos = {
-      x: this.mod((this.playerPos.x + x) / 50 + 7, 15), 
-      y: 14 - this.mod((this.playerPos.y + y) / 50 + 7, 15) 
+      x: this.mod((this.playerPos.x + x) / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
+      y: (this.dimension - 1) - this.mod((this.playerPos.y + y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
     }
 
     //Collision
     const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
-    if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 2 || this.fly) {
+    console.log(currentChunk.chunk[blockPos.y][blockPos.x])
+    if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 15 || this.fly) {
       this.playerPos.x += x
       this.playerPos.y += y
       this.map.nativeElement.style.transform = `translateX(calc(-50% - ${this.playerPos.x}px)) translateY(calc(-50% + ${this.playerPos.y}px))`    
@@ -177,13 +301,18 @@ export class HomePage {
           for (let i = chunkPos.y - 1; i < chunkPos.y + 2; i++) {
             const rateX = Math.abs(chunkPos.x + 1 * Math.sign(x))
             const rateY = Math.abs(i)
-            this.chunks.push({
+            const newChunk = {
               chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), this.mod(i, 255), this.seed, this.mapRate(rateX, rateY)),
               position: {
                 x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), 
                 y: i * (this.dimension * 50)
               }
-            })
+            }
+
+            this.chunks.push(newChunk)
+            setTimeout(() => {
+              this.drawChunk(`canvas${newChunk.position.x}${newChunk.position.y}`, newChunk.chunk)
+            }, 500)
           }
         }
       }    
@@ -195,14 +324,18 @@ export class HomePage {
           for (let i = chunkPos.x - 1; i < chunkPos.x + 2; i++) {
             const rateX = Math.abs(i)
             const rateY = Math.abs(chunkPos.y - 1 * Math.sign(y))
-
-            this.chunks.push({
+            const newChunk = {
               chunk: this.hashFunction(this.mod(i, 255), this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, this.mapRate(rateX, rateY)), 
               position: {
                 x: i * (this.dimension * 50), 
                 y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)
               }
-            })
+            }
+
+            this.chunks.push(newChunk)
+            setTimeout(() => {
+              this.drawChunk(`canvas${newChunk.position.x}${newChunk.position.y}`, newChunk.chunk)
+            }, 500)
           }
         }
       }

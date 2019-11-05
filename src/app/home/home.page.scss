@@ -1,21 +1,17 @@
 $control-font-size: 40px;
-
+ion-content{
+  --ion-background-color:gray;
+}
+canvas {  
+  width: 1250px;
+  height: 1250px;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
 #map {
   .chunk {
-    table {
-      width: 750px;
-      height: 750px;
-    }
-    td {
-      position: relative;
-    }
-    .tree {
-      position: absolute;
-      width: calc(750px / 15);
-      height: calc(750px / 15);
-      top: 0;
-      left: 0;
-    }
     position: absolute;
     transform: translateX(-50%) translateY(-50%);
   }
@@ -29,12 +25,11 @@ $control-font-size: 40px;
 .player {
   width: 40px;
   height: 40px;
-  box-shadow: -6px 0 2px 1px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 2px 1px rgba(0, 0, 0, 0.3);
   position: fixed;
   left: 50%;
   top: 50%;
   transform: translateX(calc(-50% + 6px)) translateY(calc(-50% - 2px));
-  background-color: white;
   z-index: 100;
   transition: all .2s;
 }
@@ -45,11 +40,11 @@ $control-font-size: 40px;
 }
 
 #move-controls {
-  top: 10%;
+  left: 10%;
 }
 
 #attack-controls {
-  bottom: 10%;
+  right: 10%;
 }
 
 .controls{
@@ -57,8 +52,8 @@ $control-font-size: 40px;
   position: fixed;
   width: 150px;
   height: 150px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translateY(-50%);
   .up {
     height: 33%;
     width: 33%;
