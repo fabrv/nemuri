@@ -37,14 +37,14 @@ export class HomePage {
     this.context = context
 
     this.location = {x: x, y: y}
-
-    const image = new Image()
-    image.src = this.src
-
+    this.image
     this.init = () => {
-      image.onload = () => {
+      this.image = new Image()
+      this.image.src = this.src
+
+      this.image.onload = () => {
         this.context.drawImage(
-          image, 
+          this.image, 
           this.sX, 
           this.sY, 
           this.width, 
@@ -56,6 +56,20 @@ export class HomePage {
         )
       }
     }
+
+    this.reDraw = () => {
+      this.context.drawImage(
+        this.image, 
+        this.sX, 
+        this.sY, 
+        this.width, 
+        this.height, 
+        this.location.x,
+        this.location.y, 
+        width, 
+        height
+      )
+    }
   }
 
   drawLoop () {
@@ -65,7 +79,7 @@ export class HomePage {
     const draw = () => {
       context.clearRect(0, 0, canvas.width, canvas.height);
       for (let components in this.componentsToDraw) {
-        this.componentsToDraw[components].init()
+        this.componentsToDraw[components].reDraw()
       }
     }
 
@@ -113,8 +127,20 @@ export class HomePage {
           this.fly = !this.fly; 
           this.flyStyle();
         break
+        case 39:
+          this.throwDagger(6,0)
+        break
+        case 38:
+          this.throwDagger(0,-6)
+        break
+        case 40:
+          this.throwDagger(0,6)
+        break
+        case 37:
+          this.throwDagger(-6,0)
+        break
       }
-      console.log(event.keyCode)
+      //console.log(event.keyCode)
     })
   }
 
@@ -129,7 +155,15 @@ export class HomePage {
     const canvas: any = document.getElementById('components')
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
 
-    const dagger = new this.component(160, 160, 293, 18, 6, 13, context)
+    let multiplier = 1
+    if (x < 0 || y < 0) {
+      multiplier = -1
+    }
+    const angle = ((Math.acos(x/Math.sqrt(x*x + y*y)) * multiplier) / Math.PI) * 2 + 2
+    const swordCanPos = [3, 0, 1, 2]
+    const swordPhase = [-10, -7, 0, -7]
+    const dagger = new this.component(160 + swordPhase[angle], 153, 288 + (swordCanPos[angle] * 16), 5, 16, 16, context)
+    dagger.init()
     dagger.move = () => {
       let frame = 0
       let dx = x
@@ -140,8 +174,9 @@ export class HomePage {
         dagger.location.y += dy
 
         frame += 1
-        if (frame > 3) {
+        if (frame > 8) {
           clearInterval(intervalID)
+          this.componentsToDraw.splice(this.componentsToDraw.indexOf(dagger), 1)
         }
         //console.log(dagger.location.x)
       }      
@@ -153,53 +188,35 @@ export class HomePage {
   }
 
   drawMainCharacter () {
-    const charSprite = new Image()
-    const canvas: any = document.getElementById('player')
-    const context = canvas.getContext('2d')
-    const tileSize = {height: 24, width: 16}
+    const canvas: any = document.getElementById('components')
+    const context: CanvasRenderingContext2D = canvas.getContext('2d')
+
+    const character = new this.component(160 - 6, 160 - 15, 128, 41, 16, 24, context)
+    character.init()
 
     const standCycle = [0, 1]
-    let standIndex = 0
+    const flyCycle = [5, 6]
+    let currentSprite = 0
 
-    let frames = 0
-
-    charSprite.src = '../../assets/chars_tileset.png'
-
-    charSprite.onload = () => {
-      window.requestAnimationFrame(standStep)
-    }
-
-    const standStep = () => {
-      frames = (frames + 1) % 15      
-
-      if (frames == 0) {
-        context.clearRect(0, 0, canvas.width, canvas.height)
-        if (this.fly) {
-          drawFrame(8)
-        } else {
-          drawFrame(standCycle[standIndex])
+    character.move = () => {
+      let frame = 0
+      const changeFrame = () => {
+        frame = (frame + 1) % 9
+        if (frame == 0) {
+          if (this.fly) {
+            character.sX = 128 + (16 * flyCycle[currentSprite])  
+          } else {
+            character.sX = 128 + (16 * standCycle[currentSprite])
+          }
+          currentSprite = (currentSprite + 1) % standCycle.length
         }
-        
-        standIndex = (standIndex + 1) % standCycle.length
       }
-      
-      window.requestAnimationFrame(standStep)
-      return
-    }
 
-    const drawFrame = (frame: number) => {
-      context.drawImage(
-        charSprite, 
-        128 + tileSize.width * frame, 
-        41, 
-        tileSize.width, 
-        tileSize.height, 
-        0,
-        0, 
-        tileSize.width, 
-        tileSize.height
-      )
+      setInterval(changeFrame, this.frameSpeed);
     }
+    character.move()
+
+    this.componentsToDraw.push(character)
   }
 
   drawMap () {
@@ -397,19 +414,19 @@ export class HomePage {
 
   flyStyle() {
     console.log(this.fly)
-    if (this.fly) {
+    /*if (this.fly) {
       document.getElementById('player').classList.add('fly')
     } else {
       document.getElementById('player').classList.remove('fly')
-    }
+    }*/
   }
 
   move (x: number, y: number) {
-    if (x > 0) {
+    /*if (x > 0) {
       document.getElementById('player').classList.remove('player-inverted')
     } else if (x < 0) {
       document.getElementById('player').classList.add('player-inverted')
-    }
+    }*/
     const chunkPos = {
       x: Math.floor((this.playerPos.x + x + (this.dimension * 25))/(this.dimension * 50)), 
       y: (Math.floor((this.playerPos.y + y + (this.dimension * 25))/(this.dimension * 50))) * -1
@@ -421,7 +438,7 @@ export class HomePage {
 
     //Collision
     const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
-    console.log(currentChunk.chunk[blockPos.y][blockPos.x])
+    //console.log(currentChunk.chunk[blockPos.y][blockPos.x])
     if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 15 || this.fly) {
       this.playerPos.x += x
       this.playerPos.y += y
