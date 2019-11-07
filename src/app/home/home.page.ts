@@ -79,17 +79,14 @@ export class HomePage {
     const pContext: CanvasRenderingContext2D = pCanvas.getContext('2d')
 
     const draw = () => {
-      const chunkPos = {
-        x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
-        y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1
-      }
-      const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
-  
-      const mCanvas: any = document.getElementById(`enemies${currentChunk.position.x}${currentChunk.position.y}`)
-      const mContext: CanvasRenderingContext2D = mCanvas.getContext('2d')
-
       pContext.clearRect(0, 0, pCanvas.width, pCanvas.height)
-      mContext.clearRect(0, 0, mCanvas.width, mCanvas.height)
+
+      for (let chunk in this.chunks) {
+        const currentChunk = this.chunks[chunk]
+        const mCanvas: any = document.getElementById(`enemies${currentChunk.position.x}${currentChunk.position.y}`)
+        const mContext: CanvasRenderingContext2D = mCanvas.getContext('2d')
+        mContext.clearRect(0, 0, mCanvas.width, mCanvas.height)
+      }
 
       for (let components in this.componentsToDraw) {
         this.componentsToDraw[components].reDraw()
@@ -201,7 +198,7 @@ export class HomePage {
           const daggerBlock = [Math.floor(daggerDistance[0] / 16), Math.floor(daggerDistance[1] / 16)]
           const currentBlock = currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]]
 
-          const collisionElems = [14]
+          const collisionElems = [14, 16]
           if (collisionElems.includes(currentBlock)) {
             // DAGGER COLLISION
             switch (currentBlock){
@@ -283,26 +280,86 @@ export class HomePage {
     const canvas: any = document.getElementById(`enemies${currentChunk.position.x}${currentChunk.position.y}`)
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
 
-    for (let e = 0; e < 10; e++) {
+    for (let e = 0; e < 2; e++) {
       let position = {x: Math.floor(Math.random() * this.dimension), y: Math.floor(Math.random() * this.dimension)}
       while(currentChunk.chunk[position.y][position.x] != 1 && currentChunk.chunk[position.y][position.x] != 15) {
-        position.x = position.x + 1 % this.dimension
+        position.x = (position.x + 1) % this.dimension
       }
-      console.log(currentChunk.chunk[position.y][position.x])
+      //console.log(currentChunk.chunk[position.y][position.x])
       
       const fast = new this.component(position.x * 16, position.y * 16, 368, 20, 16, 16, context)
       currentChunk.chunk[position.y][position.x] = 16
       fast.init()
-
+      fast.position = {x: position.x, y: position.y}
+      fast.animCycle = [1, 2, 3]
       fast.move = () => {
-        const animCycle = [3, 4, 5, 6, 7]
-        let currentSprite = Math.floor(Math.random() * animCycle.length)
+        // fast.animCycle = [3, 4, 5, 6, 7]
+        // fast.fast.animCycle = [1, 2, 3]
+        let currentSprite = Math.floor(Math.random() * fast.animCycle.length)
         let frame = 0
+        let newSquareReached = true
         const changeFrame = () => {
+          const pBlockPos = {
+            x: this.mod((this.playerPos.x) / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
+            y: (this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
+          }
+
+          //console.log(pBlockPos)
+          const distance = this.distance(fast.position.x, pBlockPos.x, fast.position.y, pBlockPos.y)
+          if (distance < 6) {
+            fast.animCycle = [3, 4, 5, 6, 7]
+
+            let minBlock: {x: number, y: number}
+            let minDistance = 100
+            const blocks = [
+              {x: 1, y: 0},
+              {x: -1, y: 0},
+              {x: 0, y: 1},
+              {x: 0, y: -1},
+            ]
+            for (let block in blocks) {
+              const adder = blocks[block]
+              try {
+                if ((currentChunk.chunk[fast.position.y + adder.y][fast.position.x + adder.x] == 1 || currentChunk.chunk[fast.position.y + adder.y][fast.position.x + adder.x] == 15) && (this.distance(fast.position.x + adder.x, pBlockPos.x, fast.position.y + adder.y, pBlockPos.y) < minDistance)) {
+                  minDistance = this.distance(fast.position.x + adder.x, pBlockPos.x, fast.position.y + adder.y, pBlockPos.y)
+                  minBlock = {x: fast.position.x + adder.x, y: fast.position.y + adder.y}
+                }
+              } catch (error) {}
+            }
+
+            const newLoc = {x: fast.location.x, y: fast.location.y}
+            console.log('reach', newSquareReached)
+            if (newSquareReached) {
+              fast.position.x = minBlock.x
+              fast.position.y = minBlock.y
+              newSquareReached = false
+            } else {
+              const diff = {
+                x: (fast.location.x - (fast.position.x * 16)) / 16,
+                y: (fast.location.y - (fast.position.y * 16)) / 16
+              }
+              newLoc.x -= diff.x
+              newLoc.y -= diff.y
+              fast.location.x = Math.ceil(newLoc.x)
+              fast.location.y = Math.ceil(newLoc.y)
+
+              console.log(newLoc)
+
+              if ((fast.location.x >= fast.position.x * 16) && (fast.location.y >= fast.position.y * 16)) {
+                console.log('SUCCESS')
+                fast.location.x = fast.position.x * 16
+                fast.location.y = fast.position.y * 16
+                newSquareReached = true
+              }
+            }
+          } else {
+            fast.animCycle = [1, 2, 3]
+          }
+
           frame = (frame + 1) % 9
           if (frame === 0) {
-            fast.sX = 368 + (16 * animCycle[currentSprite])
-            currentSprite = (currentSprite + 1) % animCycle.length
+            fast.sX = 368 + (16 * fast.animCycle[currentSprite])
+            currentSprite = (currentSprite + 1) % fast.animCycle.length
           }
         }
 
@@ -580,5 +637,9 @@ export class HomePage {
         }
       }
     } 
+  }
+
+  distance (x1: number, x2: number, y1: number, y2: number) {
+    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
   }
 }
