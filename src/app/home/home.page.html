@@ -8,11 +8,11 @@
   </div>
 
   <div id="attack-controls" class="controls">
-    <div class="up" (click)="throwDagger(0,-7)"></div>
-    <div class="down" (click)="throwDagger(0,7)"></div>
+    <div class="up" (click)="throwDagger(0,-8)"></div>
+    <div class="down" (click)="throwDagger(0,8)"></div>
     <div class="click" (click)="fly = !fly; flyStyle();"></div>
-    <div class="left" (click)="throwDagger(-7,0)"></div>
-    <div class="right" (click)="throwDagger(7,0)"></div>
+    <div class="left" (click)="throwDagger(-8,0)"></div>
+    <div class="right" (click)="throwDagger(8,0)"></div>
   </div>
   
   <!--<canvas class="player" width="16px" height="24px" id="player"></canvas>-->
@@ -27,8 +27,16 @@
       height="560px"
       *ngFor="let chunk of chunks" 
       [style.left.px]="chunk.position.x" 
-      [style.top.px]="chunk.position.y"
-      (click)="drawChunk('canvas'+chunk.position.x+''+chunk.position.y, chunk.chunk)">
+      [style.top.px]="chunk.position.y">
+    </canvas>
+    <canvas 
+      class="chunk enemies"
+      id="enemies{{chunk.position.x}}{{chunk.position.y}}" 
+      width="560px" 
+      height="560px"
+      *ngFor="let chunk of chunks" 
+      [style.left.px]="chunk.position.x" 
+      [style.top.px]="chunk.position.y">
     </canvas>
   </div>
 </ion-content>

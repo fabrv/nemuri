@@ -78,7 +78,6 @@ export class HomePage {
     const pCanvas: any = document.getElementById('components')
     const pContext: CanvasRenderingContext2D = pCanvas.getContext('2d')
 
-    let frame = 0
     const draw = () => {
       const chunkPos = {
         x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
@@ -86,12 +85,11 @@ export class HomePage {
       }
       const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
   
-      const mCanvas: any = document.getElementById(`canvas${currentChunk.position.x}${currentChunk.position.y}`)
+      const mCanvas: any = document.getElementById(`enemies${currentChunk.position.x}${currentChunk.position.y}`)
       const mContext: CanvasRenderingContext2D = mCanvas.getContext('2d')
 
-      pContext.clearRect(0, 0, pCanvas.width, pCanvas.height);
-
-      this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
+      pContext.clearRect(0, 0, pCanvas.width, pCanvas.height)
+      mContext.clearRect(0, 0, mCanvas.width, mCanvas.height)
 
       for (let components in this.componentsToDraw) {
         this.componentsToDraw[components].reDraw()
@@ -196,20 +194,26 @@ export class HomePage {
           x: this.mod((this.playerPos.x) / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
           y: (this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
         }
-        const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
-        daggerDistance = [daggerDistance[0] + dy, daggerDistance[1] + dx]
-        const daggerBlock = [Math.floor(daggerDistance[0] / 16), Math.floor(daggerDistance[1] / 16)]
-        const currentBlock = currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]]
 
-        const collisionElems = [14]
-        if (collisionElems.includes(currentBlock)) {
-          // DAGGER COLLISION
-          switch (currentBlock){
-            case 14:
-              currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 15
-            break
-          }
+        try {
+          const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
+          daggerDistance = [daggerDistance[0] + dy, daggerDistance[1] + dx]
+          const daggerBlock = [Math.floor(daggerDistance[0] / 16), Math.floor(daggerDistance[1] / 16)]
+          const currentBlock = currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]]
 
+          const collisionElems = [14]
+          if (collisionElems.includes(currentBlock)) {
+            // DAGGER COLLISION
+            switch (currentBlock){
+              case 14:
+                currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 15
+                this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
+              break
+            }
+
+            frame = 8
+          } 
+        } catch (error) {
           frame = 8
         }
 
@@ -217,7 +221,7 @@ export class HomePage {
         dagger.location.y += dy
 
         frame += 1
-        if (frame > 8) {
+        if (frame > 5) {
           clearInterval(intervalID)
           this.componentsToDraw.splice(this.componentsToDraw.indexOf(dagger), 1)
         }
@@ -256,7 +260,7 @@ export class HomePage {
         }
       }
 
-      setInterval(changeFrame, this.frameSpeed);
+      setInterval(changeFrame, this.frameSpeed)
     }
     character.move()
 
@@ -276,12 +280,38 @@ export class HomePage {
     }
     const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
 
-    const canvas: any = document.getElementById(`canvas${currentChunk.position.x}${currentChunk.position.y}`)
+    const canvas: any = document.getElementById(`enemies${currentChunk.position.x}${currentChunk.position.y}`)
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
 
-    const fast = new this.component(300, 300, 368, 20, 16, 16, context)
-    fast.init()
-    this.componentsToDraw.push(fast)
+    for (let e = 0; e < 10; e++) {
+      let position = {x: Math.floor(Math.random() * this.dimension), y: Math.floor(Math.random() * this.dimension)}
+      while(currentChunk.chunk[position.y][position.x] != 1 && currentChunk.chunk[position.y][position.x] != 15) {
+        position.x = position.x + 1 % this.dimension
+      }
+      console.log(currentChunk.chunk[position.y][position.x])
+      
+      const fast = new this.component(position.x * 16, position.y * 16, 368, 20, 16, 16, context)
+      currentChunk.chunk[position.y][position.x] = 16
+      fast.init()
+
+      fast.move = () => {
+        const animCycle = [3, 4, 5, 6, 7]
+        let currentSprite = Math.floor(Math.random() * animCycle.length)
+        let frame = 0
+        const changeFrame = () => {
+          frame = (frame + 1) % 9
+          if (frame === 0) {
+            fast.sX = 368 + (16 * animCycle[currentSprite])
+            currentSprite = (currentSprite + 1) % animCycle.length
+          }
+        }
+
+        setInterval(changeFrame, 1000/60)
+      }
+      fast.move()
+
+      this.componentsToDraw.push(fast)
+    }
   }
 
   drawChunk(canvasId: string, map: any) {
@@ -299,7 +329,7 @@ export class HomePage {
       {x: 0, y: 7},{x: 1, y: 7},
       {x: 0, y: 8},{x: 1, y: 8},
       {x: 11, y: 7},{x: 11, y: 9},
-      {x: 1, y: 5}
+      {x: 0, y: 0}
     ]
 
     mapSprite.src = `../../assets/overworld_tileset_grass.png`
