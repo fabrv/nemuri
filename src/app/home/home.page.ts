@@ -53,8 +53,8 @@ export class HomePage {
           this.height, 
           this.location.x,
           this.location.y, 
-          width, 
-          height
+          this.width, 
+          this.height
         )
       }
     }
@@ -74,18 +74,32 @@ export class HomePage {
     }
   }
 
-  drawLoop () {
-    const canvas: any = document.getElementById('components')
-    const context: CanvasRenderingContext2D = canvas.getContext('2d')
+  drawLoop () {    
+    const pCanvas: any = document.getElementById('components')
+    const pContext: CanvasRenderingContext2D = pCanvas.getContext('2d')
 
+    let frame = 0
     const draw = () => {
-      context.clearRect(0, 0, canvas.width, canvas.height);
+      const chunkPos = {
+        x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
+        y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1
+      }
+      const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
+  
+      const mCanvas: any = document.getElementById(`canvas${currentChunk.position.x}${currentChunk.position.y}`)
+      const mContext: CanvasRenderingContext2D = mCanvas.getContext('2d')
+
+      pContext.clearRect(0, 0, pCanvas.width, pCanvas.height);
+
+      this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
+
       for (let components in this.componentsToDraw) {
         this.componentsToDraw[components].reDraw()
       }
+      window.requestAnimationFrame(draw)
     }
 
-    setInterval(draw, this.frameSpeed);
+    window.requestAnimationFrame(draw)
   }
 
   fly = false
@@ -130,16 +144,16 @@ export class HomePage {
           this.flyStyle();
         break
         case 39:
-          this.throwDagger(6,0)
+          this.throwDagger(8,0)
         break
         case 38:
-          this.throwDagger(0,-6)
+          this.throwDagger(0,-8)
         break
         case 40:
-          this.throwDagger(0,6)
+          this.throwDagger(0,8)
         break
         case 37:
-          this.throwDagger(-6,0)
+          this.throwDagger(-8,0)
         break
       }
       //console.log(event.keyCode)
@@ -150,6 +164,7 @@ export class HomePage {
     this.drawMap()
     this.drawMainCharacter()
     this.drawLoop()
+    this.drawEnemies()
     this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE)
   }
 
@@ -181,7 +196,7 @@ export class HomePage {
           x: this.mod((this.playerPos.x) / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
           y: (this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
         }
-        const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)        
+        const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
         daggerDistance = [daggerDistance[0] + dy, daggerDistance[1] + dx]
         const daggerBlock = [Math.floor(daggerDistance[0] / 16), Math.floor(daggerDistance[1] / 16)]
         const currentBlock = currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]]
@@ -191,9 +206,8 @@ export class HomePage {
           // DAGGER COLLISION
           switch (currentBlock){
             case 14:
-                currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 15
-                this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
-              break
+              currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 15
+            break
           }
 
           frame = 8
@@ -214,6 +228,8 @@ export class HomePage {
     dagger.move()
     this.componentsToDraw.push(dagger)
   }
+
+  //draw
 
   drawMainCharacter () {
     const canvas: any = document.getElementById('components')
@@ -253,6 +269,21 @@ export class HomePage {
     }
   }
 
+  drawEnemies () {
+    const chunkPos = {
+      x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
+      y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1
+    }
+    const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
+
+    const canvas: any = document.getElementById(`canvas${currentChunk.position.x}${currentChunk.position.y}`)
+    const context: CanvasRenderingContext2D = canvas.getContext('2d')
+
+    const fast = new this.component(300, 300, 368, 20, 16, 16, context)
+    fast.init()
+    this.componentsToDraw.push(fast)
+  }
+
   drawChunk(canvasId: string, map: any) {
     const mapSprite = new Image()
     const canvas: any = document.getElementById(canvasId)
@@ -267,7 +298,8 @@ export class HomePage {
       {x: 0, y: 6},{x: 1, y: 6},{x: 2, y: 6},
       {x: 0, y: 7},{x: 1, y: 7},
       {x: 0, y: 8},{x: 1, y: 8},
-      {x: 11, y: 7},{x: 11, y: 9}
+      {x: 11, y: 7},{x: 11, y: 9},
+      {x: 1, y: 5}
     ]
 
     mapSprite.src = `../../assets/overworld_tileset_grass.png`
