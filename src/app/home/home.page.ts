@@ -10,13 +10,15 @@ import { TaskTimer, Task } from 'tasktimer'
 })
 export class HomePage {
   @ViewChild('map', {static: false}) map: ElementRef
-  chunks: Array<{chunk: Array<Array<number>>, position: {x: number, y: number}}> = []
+  chunks: Array<{chunk: Array<Array<any>>, position: {x: number, y: number}}> = []
   playerPos: {x: number, y: number} = {x: 0, y: 0}
-  seed:number = 5
+  seed:number = 15
   dimension: number = 35
   pressed: boolean = false
 
   frameSpeed: number = 30
+
+  playerAreaDimension: number = 128
 
   componentsToDraw: Array<any> = []
 
@@ -162,14 +164,41 @@ export class HomePage {
     const angle = ((Math.acos(x/Math.sqrt(x*x + y*y)) * multiplier) / Math.PI) * 2 + 2
     const swordCanPos = [3, 0, 1, 2]
     const swordPhase = [-10, -7, 0, -7]
-    const dagger = new this.component(160 + swordPhase[angle], 153, 288 + (swordCanPos[angle] * 16), 5, 16, 16, context)
+    const dagger = new this.component(this.playerAreaDimension / 2 + swordPhase[angle], this.playerAreaDimension / 2 - 7, 288 + (swordCanPos[angle] * 16), 5, 16, 16, context)
     dagger.init()
     dagger.move = () => {
       let frame = 0
       let dx = x
       let dy = y
       let intervalID
+      let daggerDistance = [0,0]
       const changeLocation = () => {
+        const chunkPos = {
+          x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
+          y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1
+        }
+        const blockPos = {
+          x: this.mod((this.playerPos.x) / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
+          y: (this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
+        }
+        const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)        
+        daggerDistance = [daggerDistance[0] + dy, daggerDistance[1] + dx]
+        const daggerBlock = [Math.floor(daggerDistance[0] / 16), Math.floor(daggerDistance[1] / 16)]
+        const currentBlock = currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]]
+
+        const collisionElems = [14]
+        if (collisionElems.includes(currentBlock)) {
+          // DAGGER COLLISION
+          switch (currentBlock){
+            case 14:
+                currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 15
+                this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
+              break
+          }
+
+          frame = 8
+        }
+
         dagger.location.x += dx
         dagger.location.y += dy
 
@@ -178,7 +207,6 @@ export class HomePage {
           clearInterval(intervalID)
           this.componentsToDraw.splice(this.componentsToDraw.indexOf(dagger), 1)
         }
-        //console.log(dagger.location.x)
       }      
       
       intervalID = setInterval(changeLocation, this.frameSpeed);
@@ -191,7 +219,7 @@ export class HomePage {
     const canvas: any = document.getElementById('components')
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
 
-    const character = new this.component(160 - 6, 160 - 15, 128, 41, 16, 24, context)
+    const character = new this.component(this.playerAreaDimension / 2 - 6, this.playerAreaDimension / 2 - 20, 128, 41, 16, 24, context)
     character.init()
 
     const standCycle = [0, 1]
@@ -239,7 +267,7 @@ export class HomePage {
       {x: 0, y: 6},{x: 1, y: 6},{x: 2, y: 6},
       {x: 0, y: 7},{x: 1, y: 7},
       {x: 0, y: 8},{x: 1, y: 8},
-      {x: 11, y: 7}      
+      {x: 11, y: 7},{x: 11, y: 9}
     ]
 
     mapSprite.src = `../../assets/overworld_tileset_grass.png`
@@ -438,7 +466,6 @@ export class HomePage {
 
     //Collision
     const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
-    //console.log(currentChunk.chunk[blockPos.y][blockPos.x])
     if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 15 || this.fly) {
       this.playerPos.x += x
       this.playerPos.y += y
