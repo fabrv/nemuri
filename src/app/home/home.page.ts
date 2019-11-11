@@ -280,7 +280,7 @@ export class HomePage {
     const canvas: any = document.getElementById(`enemies${currentChunk.position.x}${currentChunk.position.y}`)
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
 
-    for (let e = 0; e < 2; e++) {
+    for (let e = 0; e < 5; e++) {
       let position = {x: Math.floor(Math.random() * this.dimension), y: Math.floor(Math.random() * this.dimension)}
       while(currentChunk.chunk[position.y][position.x] != 1 && currentChunk.chunk[position.y][position.x] != 15) {
         position.x = (position.x + 1) % this.dimension
@@ -316,6 +316,7 @@ export class HomePage {
               {x: -1, y: 0},
               {x: 0, y: 1},
               {x: 0, y: -1},
+              {x: 0, y: 0}
             ]
             for (let block in blocks) {
               const adder = blocks[block]
@@ -327,8 +328,6 @@ export class HomePage {
               } catch (error) {}
             }
 
-            const newLoc = {x: fast.location.x, y: fast.location.y}
-            console.log('reach', newSquareReached)
             if (newSquareReached) {
               fast.position.x = minBlock.x
               fast.position.y = minBlock.y
@@ -338,15 +337,11 @@ export class HomePage {
                 x: (fast.location.x - (fast.position.x * 16)) / 16,
                 y: (fast.location.y - (fast.position.y * 16)) / 16
               }
-              newLoc.x -= diff.x
-              newLoc.y -= diff.y
-              fast.location.x = Math.ceil(newLoc.x)
-              fast.location.y = Math.ceil(newLoc.y)
 
-              console.log(newLoc)
+              fast.location.x -= Math.sign(diff.x) * (diff.x / diff.x || 1)
+              fast.location.y -= Math.sign(diff.y) * (diff.y / diff.y || 1)
 
-              if ((fast.location.x >= fast.position.x * 16) && (fast.location.y >= fast.position.y * 16)) {
-                console.log('SUCCESS')
+              if ((fast.location.x == fast.position.x * 16) && (fast.location.y == fast.position.y * 16)) {
                 fast.location.x = fast.position.x * 16
                 fast.location.y = fast.position.y * 16
                 newSquareReached = true
