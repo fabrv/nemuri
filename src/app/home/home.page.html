@@ -1,4 +1,11 @@
 <ion-content>
+  <div *ngIf="mainMenu" id="main-menu">
+    <ul>
+      <li *ngIf="gameCreated"><a>Continue game</a></li>
+      <li><a (click)="createGame()">New game</a></li>
+    </ul>
+  </div>
+
   <div id="move-controls" class="controls">
     <div class="up" (tap)="move(0, 50);"></div>
     <div class="down" (click)="move(0, -50)"></div>

@@ -16,6 +16,9 @@ export class HomePage {
   dimension: number = 35
   pressed: boolean = false
   showHud: number = 0
+  gameCreated: boolean = false
+
+  mainMenu = true
 
   money: number = 15
 
@@ -23,7 +26,7 @@ export class HomePage {
 
   playerAreaDimension: number = 128
 
-  componentsToDraw: Array<any> = []  
+  componentsToDraw: Array<any> = []
 
   component = function (x: number, 
                         y: number,
@@ -108,24 +111,12 @@ export class HomePage {
   timer = new TaskTimer(200)
 
   constructor(private screenOrientation: ScreenOrientation) {
-    let row = -1
-    for (let i = 0; i < 9; i++) {
-      if (i % 3 == 0) {
-        row += 1
-      }
-      const rateX = Math.abs((i % 3) - 1)
-      const rateY = Math.abs(row - 1)
-      
-      const newChunk = {
-        chunk: this.hashFunction(this.mod((i % 3) - 1, 255), this.mod(row - 1, 255), this.seed, this.mapRate(rateX, rateY)), 
-        position: {
-          x: ((i % 3) - 1) * (this.dimension * 50), 
-          y: (row - 1) * (this.dimension * 50)
-        }
-      }
-      this.chunks[i] = newChunk
-    }
+    this.createChunks()
 
+    if (localStorage.lastGame) {
+      this.gameCreated = true
+    }
+    
     window.addEventListener('keydown', (event)=> {
       switch (event.keyCode) {
         case 87:
@@ -160,12 +151,48 @@ export class HomePage {
     })
   }
 
+  createGame () {
+    this.seed = Math.floor(Math.random() * 10000)
+    this.createChunks()
+
+    setTimeout(() => {
+      this.drawMap()
+      this.drawHud()
+      this.drawLoop()
+      this.drawEnemies()
+
+      this.mainMenu = false
+
+      this.saveGame()
+    }, 100)
+  }
+
+  createChunks () {
+    let row = -1
+    for (let i = 0; i < 9; i++) {
+      if (i % 3 == 0) {
+        row += 1
+      }
+      const rateX = Math.abs((i % 3) - 1)
+      const rateY = Math.abs(row - 1)
+      
+      const newChunk = {
+        chunk: this.hashFunction(this.mod((i % 3) - 1, 255), this.mod(row - 1, 255), this.seed, this.mapRate(rateX, rateY)), 
+        position: {
+          x: ((i % 3) - 1) * (this.dimension * 50), 
+          y: (row - 1) * (this.dimension * 50)
+        }
+      }
+      this.chunks[i] = newChunk
+    }
+  }
+
   ngAfterViewInit() {
     this.drawMap()
     this.drawMainCharacter()
-    this.drawHud()
-    this.drawLoop()
-    this.drawEnemies()
+    //this.drawHud()
+    //this.drawLoop()
+    //this.drawEnemies()
     this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE)
   }
 
@@ -217,6 +244,8 @@ export class HomePage {
                 }
                 currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 15
                 this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
+
+                this.saveGame(currentChunk)
               break
               case 16:
                 const enemy = this.componentsToDraw.find((element) => {
@@ -377,7 +406,6 @@ export class HomePage {
   drawStore () {
     let n = 0
     for (let i = 0; i < 16; i++) {
-      console.log(n, i % 4, i)
       this.chunks[4].chunk[6 + n][6 + (i % 4)] = 18 + i
       if (i % 4 == 3) {
         n ++
@@ -474,7 +502,6 @@ export class HomePage {
               newSquareReached = false
 
               if (this.componentsToDraw[0].life <= 0) {
-                console.log('DEAD')
                 currentChunk.chunk[blockPos.y][blockPos.x] = 17
                 this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
                 newSquareReached = true
@@ -840,5 +867,31 @@ export class HomePage {
 
   distance (x1: number, x2: number, y1: number, y2: number) {
     return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
+  }
+
+  saveGame (chunkToSave = null) {
+    let game = {
+      savedChunks: {},
+      money: this.money,
+      playerPos: this.playerPos,
+      life: this.componentsToDraw[0].life,
+      seed: this.seed
+    }
+
+    if (localStorage.getItem(this.seed.toString())) {
+      game.savedChunks = JSON.parse(localStorage.getItem(this.seed.toString())).savedChunks
+    }
+
+    if (chunkToSave != null) {
+      for (let r in chunkToSave.chunk) {
+        for (let c in chunkToSave.chunk[r]) {
+          if (chunkToSave.chunk[r][c] == 16) chunkToSave.chunk[r][c] = 1
+        }
+      }
+      game.savedChunks[`${chunkToSave.position.x}-${chunkToSave.position.y}`] = chunkToSave
+    }    
+
+    localStorage.setItem(this.seed.toString(), JSON.stringify(game))
+    localStorage.lastGame = this.seed
   }
 }
