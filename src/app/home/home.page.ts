@@ -368,9 +368,25 @@ export class HomePage {
   }
 
   drawMap () {
+    this.drawStore()
     for (let chunk in this.chunks) {
       this.drawChunk(`canvas${this.chunks[chunk].position.x}${this.chunks[chunk].position.y}`, this.chunks[chunk].chunk)
+    }    
+  }
+
+  drawStore () {
+    let n = 0
+    for (let i = 0; i < 16; i++) {
+      console.log(n, i % 4, i)
+      this.chunks[4].chunk[6 + n][6 + (i % 4)] = 18 + i
+      if (i % 4 == 3) {
+        n ++
+      }
     }
+    this.chunks[4].chunk[10][6] = 1
+    this.chunks[4].chunk[10][7] = 1
+    this.chunks[4].chunk[10][8] = 35
+    this.chunks[4].chunk[10][9] = 1
   }
 
   drawEnemies () {
@@ -514,7 +530,12 @@ export class HomePage {
       {x: 0, y: 8},{x: 1, y: 8},
       {x: 11, y: 7},{x: 11, y: 9},
       {x: 0, y: 0},
-      {x: 6, y: 16}
+      {x: 6, y: 16},
+      {x: 0, y: 12},{x: 1, y: 12},{x: 2, y: 12},{x: 3, y: 12},
+      {x: 0, y: 13},{x: 1, y: 13},{x: 2, y: 13},{x: 3, y: 13},
+      {x: 0, y: 14},{x: 1, y: 14},{x: 2, y: 14},{x: 3, y: 14},
+      {x: 0, y: 15},{x: 1, y: 15},{x: 2, y: 15},{x: 3, y: 15},
+                                 ,{x: 4, y: 3}
     ]
 
     mapSprite.src = `../../assets/overworld_tileset_grass.png`
@@ -763,7 +784,7 @@ export class HomePage {
 
     //Collision
     const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
-    if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 15  || currentChunk.chunk[blockPos.y][blockPos.x] == 17) {
+    if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 15  || currentChunk.chunk[blockPos.y][blockPos.x] == 17 || currentChunk.chunk[blockPos.y][blockPos.x] == 35) {
       this.playerPos.x += x
       this.playerPos.y += y
       this.map.nativeElement.style.transform = `translateX(calc(-50% - ${this.playerPos.x}px)) translateY(calc(-50% + ${this.playerPos.y}px))`    
