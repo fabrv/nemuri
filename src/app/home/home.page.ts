@@ -15,12 +15,15 @@ export class HomePage {
   seed:number = 15
   dimension: number = 35
   pressed: boolean = false
+  showHearts: number = 0
+
+  money: number = 15
 
   frameSpeed: number = 30
 
   playerAreaDimension: number = 128
 
-  componentsToDraw: Array<any> = []
+  componentsToDraw: Array<any> = []  
 
   component = function (x: number, 
                         y: number,
@@ -70,8 +73,8 @@ export class HomePage {
         this.height, 
         this.location.x,
         this.location.y, 
-        width, 
-        height
+        this.width, 
+        this.height
       )
     }
   }
@@ -138,8 +141,7 @@ export class HomePage {
           this.move(50, 0)
         break  
         case 32:
-          this.fly = !this.fly; 
-          this.flyStyle();
+          this.showHearts = 0
         break
         case 39:
           this.throwDagger(8,0)
@@ -161,6 +163,7 @@ export class HomePage {
   ngAfterViewInit() {
     this.drawMap()
     this.drawMainCharacter()
+    this.drawHud()
     this.drawLoop()
     this.drawEnemies()
     this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE)
@@ -253,6 +256,7 @@ export class HomePage {
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
 
     const character = new this.component(this.playerAreaDimension / 2 - 6, this.playerAreaDimension / 2 - 20, 128, 41, 16, 24, context)
+    character.life = 4
     character.init()
 
     const standCycle = [0, 1]
@@ -278,6 +282,68 @@ export class HomePage {
     character.move()
 
     this.componentsToDraw.push(character)
+  }
+
+  drawHud () {
+    const canvas: any = document.getElementById('components')
+    const context: CanvasRenderingContext2D = canvas.getContext('2d')
+    const hearts = [
+      new this.component(this.playerAreaDimension / 2 - 13, this.playerAreaDimension / 2 - 35, 288, 256, 16, 16, context), 
+      new this.component(this.playerAreaDimension / 2 + 3, this.playerAreaDimension / 2 - 35, 288, 256, 16, 16, context)
+    ]
+    for (let i = 0; i < hearts.length; i++) {
+      hearts[i].reDraw = () => {
+        if (this.showHearts < 150) {
+          hearts[i].context.drawImage(
+            hearts[i].image, 
+            hearts[i].sX, 
+            hearts[i].sY, 
+            hearts[i].width, 
+            hearts[i].height, 
+            hearts[i].location.x,
+            hearts[i].location.y, 
+            hearts[i].width, 
+            hearts[i].height
+          )
+          this.showHearts ++
+        }
+      }
+
+      hearts[i].init()
+      this.componentsToDraw.push(hearts[i])
+    }
+
+    const coin = new this.component(this.playerAreaDimension / 2 - 10, this.playerAreaDimension / 2 + 5, 288, 272, 8, 8, context)
+    coin.frame = 0
+    coin.animFrame = 0
+    coin.reDraw = () => {
+      if (this.showHearts < 150) {
+        this.fly = true
+        if (coin.frame == 0) {
+          coin.sX = 288 + coin.animFrame * 8
+          coin.animFrame = (coin.animFrame + 1) % 4
+        }
+        coin.frame = (coin.frame + 1) % 6
+
+        coin.context.drawImage(
+          coin.image, 
+          coin.sX, 
+          coin.sY, 
+          coin.width, 
+          coin.height, 
+          coin.location.x,
+          coin.location.y, 
+          coin.width, 
+          coin.height
+        )
+        coin.context.font = 'bold 8px Consolas'
+        coin.context.fillText(this.money, this.playerAreaDimension / 2, this.playerAreaDimension / 2 + 12)
+      } else {
+        this.fly = false
+      }
+    }
+    coin.init()
+    this.componentsToDraw.push(coin)
   }
 
   drawMap () {
@@ -426,11 +492,6 @@ export class HomePage {
     }
   }
 
-  timerRun(start: boolean, x: number = 0, y: number = 0) {
-    if (start) { this.timer.add(task => this.move(x, y)).start(); }
-    else { this.timer.reset() }
-  }
-
   hashFunction(x: number, y: number, seed: number, biome: number): Array<Array<number>> {
     const chunkSeed = parseInt(seed + '' + x + '' + y)
     let chunk = []
@@ -560,8 +621,6 @@ export class HomePage {
     return chunk
   }
 
-  //finalRunChunk (chunk: Array<)
-
   random(seed: number) {
     var x = Math.sin(seed++) * 10000;
     return x - Math.floor(x);
@@ -601,7 +660,7 @@ export class HomePage {
 
     //Collision
     const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
-    if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 15 || this.fly) {
+    if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 15) {
       this.playerPos.x += x
       this.playerPos.y += y
       this.map.nativeElement.style.transform = `translateX(calc(-50% - ${this.playerPos.x}px)) translateY(calc(-50% + ${this.playerPos.y}px))`    
