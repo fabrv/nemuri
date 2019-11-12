@@ -12,10 +12,10 @@ export class HomePage {
   @ViewChild('map', {static: false}) map: ElementRef
   chunks: Array<{chunk: Array<Array<any>>, position: {x: number, y: number}}> = []
   playerPos: {x: number, y: number} = {x: 0, y: 0}
-  seed:number = 15
+  seed:number = 3
   dimension: number = 35
   pressed: boolean = false
-  showHearts: number = 0
+  showHud: number = 0
 
   money: number = 15
 
@@ -141,7 +141,7 @@ export class HomePage {
           this.move(50, 0)
         break  
         case 32:
-          this.showHearts = 0
+          this.showHud = 0
         break
         case 39:
           this.throwDagger(8,0)
@@ -291,9 +291,22 @@ export class HomePage {
       new this.component(this.playerAreaDimension / 2 - 13, this.playerAreaDimension / 2 - 35, 288, 256, 16, 16, context), 
       new this.component(this.playerAreaDimension / 2 + 3, this.playerAreaDimension / 2 - 35, 288, 256, 16, 16, context)
     ]
+    hearts[0].min = 1
+    hearts[0].max = 2
+    hearts[1].min = 3
+    hearts[1].max = 4
+
     for (let i = 0; i < hearts.length; i++) {
       hearts[i].reDraw = () => {
-        if (this.showHearts < 150) {
+        if (this.showHud < 150) {
+          if (this.componentsToDraw[0].life < hearts[i].min) {
+            hearts[i].sX = 288 + 16 * 2
+          } else if (this.componentsToDraw[0].life == hearts[i].min) {
+            hearts[i].sX = 288 + 16
+          } else if (this.componentsToDraw[0].life >= hearts[i].min) {
+            hearts[i].sX = 288
+          }
+
           hearts[i].context.drawImage(
             hearts[i].image, 
             hearts[i].sX, 
@@ -305,7 +318,7 @@ export class HomePage {
             hearts[i].width, 
             hearts[i].height
           )
-          this.showHearts ++
+          this.showHud ++
         }
       }
 
@@ -317,7 +330,7 @@ export class HomePage {
     coin.frame = 0
     coin.animFrame = 0
     coin.reDraw = () => {
-      if (this.showHearts < 150) {
+      if (this.showHud < 150) {
         this.fly = true
         if (coin.frame == 0) {
           coin.sX = 288 + coin.animFrame * 8
@@ -362,7 +375,7 @@ export class HomePage {
     const canvas: any = document.getElementById(`enemies${currentChunk.position.x}${currentChunk.position.y}`)
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
 
-    for (let e = 0; e < 10; e++) {
+    for (let e = 0; e < 5; e++) {
       let position = {x: Math.floor(Math.random() * this.dimension), y: Math.floor(Math.random() * this.dimension)}
       while(currentChunk.chunk[position.y][position.x] != 1 && currentChunk.chunk[position.y][position.x] != 15) {
         position.x = (position.x + 1) % this.dimension
@@ -380,6 +393,7 @@ export class HomePage {
         let currentSprite = Math.floor(Math.random() * fast.animCycle.length)
         let frame = 0
         let newSquareReached = true
+        let collisionCount = 1
         const changeFrame = () => {
           const pBlockPos = {
             x: this.mod((this.playerPos.x) / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
@@ -411,6 +425,19 @@ export class HomePage {
             }
 
             if (newSquareReached) {
+              const blockPos = {
+                x: this.mod(this.playerPos.x / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
+                y: (this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
+              }
+              
+              if (blockPos.x == minBlock.x && blockPos.y == minBlock.y) {
+                // DAMAGE TO PLAYER
+                if (collisionCount == 0) {
+                  this.componentsToDraw[0].life -= 1
+                  this.showHud = 0
+                }
+                collisionCount = (collisionCount + 1) % 2
+              }
               currentChunk.chunk[fast.position.y][fast.position.x] = 1
 
               fast.position.x = minBlock.x
