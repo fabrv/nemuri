@@ -12,7 +12,7 @@ export class HomePage {
   @ViewChild('map', {static: false}) map: ElementRef
   chunks: Array<{chunk: Array<Array<any>>, position: {x: number, y: number}}> = []
   playerPos: {x: number, y: number} = {x: 0, y: 0}
-  seed:number = 3
+  seed:number = 34
   dimension: number = 35
   pressed: boolean = false
   showHud: number = 0

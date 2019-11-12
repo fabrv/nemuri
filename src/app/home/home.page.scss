@@ -156,6 +156,34 @@ canvas {
     transform: translateX(-50%) translateY(-50%);
   }
 
+  #a-click {
+    background-color: green;
+    opacity: .5;
+  }
+  #a-click::after {
+    content: "A";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    
+    transform: translateX(-50%) translateY(-50%);
+    font-size: 2em;    
+  }
+
+  #b-click {
+    background-color: red;
+    opacity: .5;
+  }
+  #b-click::after {
+    content: "B";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    
+    transform: translateX(-50%) translateY(-50%);
+    font-size: 2em;    
+  }
+
   div {
     transition: .1s all;
     position: absolute;

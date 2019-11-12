@@ -2,7 +2,7 @@
   <div id="move-controls" class="controls">
     <div class="up" (tap)="move(0, 50);"></div>
     <div class="down" (click)="move(0, -50)"></div>
-    <div class="click"></div>
+    <div class="click" id="a-click"></div>
     <div class="left" (click)="move(-50, 0)"></div>
     <div class="right" (click)="move(50, 0)"></div>
   </div>
@@ -10,7 +10,7 @@
   <div id="attack-controls" class="controls">
     <div class="up" (click)="throwDagger(0,-8)"></div>
     <div class="down" (click)="throwDagger(0,8)"></div>
-    <div class="click" (click)="showHud = 0"></div>
+    <div class="click" id="b-click" (click)="showHud = 0"></div>
     <div class="left" (click)="throwDagger(-8,0)"></div>
     <div class="right" (click)="throwDagger(8,0)"></div>
   </div>
