@@ -446,7 +446,9 @@ export class HomePage {
                 }
                 collisionCount = (collisionCount + 1) % 2
               }
-              currentChunk.chunk[fast.position.y][fast.position.x] = 1
+              if (currentChunk.chunk[fast.position.y][fast.position.x] != 17) {
+                currentChunk.chunk[fast.position.y][fast.position.x] = 1
+              }
 
               fast.position.x = minBlock.x
               fast.position.y = minBlock.y
@@ -454,6 +456,14 @@ export class HomePage {
               currentChunk.chunk[fast.position.y][fast.position.x] = 16
 
               newSquareReached = false
+
+              if (this.componentsToDraw[0].life <= 0) {
+                console.log('DEAD')
+                currentChunk.chunk[blockPos.y][blockPos.x] = 17
+                this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
+                newSquareReached = true
+                this.respawn()
+              }
             } else {
               const diff = {
                 x: (fast.location.x - (fast.position.x * 16)) / 16,
@@ -503,7 +513,8 @@ export class HomePage {
       {x: 0, y: 7},{x: 1, y: 7},
       {x: 0, y: 8},{x: 1, y: 8},
       {x: 11, y: 7},{x: 11, y: 9},
-      {x: 0, y: 0}
+      {x: 0, y: 0},
+      {x: 6, y: 16}
     ]
 
     mapSprite.src = `../../assets/overworld_tileset_grass.png`
@@ -727,6 +738,14 @@ export class HomePage {
     }*/
   }
 
+  respawn () {
+    this.playerPos.x = 0
+    this.playerPos.y = 0
+    this.move(0, 0)
+
+    this.componentsToDraw[0].life = 4
+  }
+
   move (x: number, y: number) {
     /*if (x > 0) {
       document.getElementById('player').classList.remove('player-inverted')
@@ -744,7 +763,7 @@ export class HomePage {
 
     //Collision
     const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
-    if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 15) {
+    if (currentChunk.chunk[blockPos.y][blockPos.x] == 1 || currentChunk.chunk[blockPos.y][blockPos.x] == 15  || currentChunk.chunk[blockPos.y][blockPos.x] == 17) {
       this.playerPos.x += x
       this.playerPos.y += y
       this.map.nativeElement.style.transform = `translateX(calc(-50% - ${this.playerPos.x}px)) translateY(calc(-50% + ${this.playerPos.y}px))`    
