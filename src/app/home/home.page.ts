@@ -209,6 +209,12 @@ export class HomePage {
             // DAGGER COLLISION
             switch (currentBlock){
               case 14:
+                const randCoin = Math.random()
+                if (randCoin < 0.2) {
+                  this.coinDrop((blockPos.x + daggerBlock[1]) * 16, (blockPos.y + daggerBlock[0]) * 16, 1)
+                } else if (randCoin > 0.9) {
+                  this.coinDrop((blockPos.x + daggerBlock[1]) * 16, (blockPos.y + daggerBlock[0]) * 16, 2)
+                }
                 currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 15
                 this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
               break
@@ -223,6 +229,8 @@ export class HomePage {
                   currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 1
                   this.componentsToDraw.splice(this.componentsToDraw.indexOf(enemy), 1)
                   clearInterval(enemy.interval)
+
+                  this.coinDrop((blockPos.x + daggerBlock[1]) * 16, (blockPos.y + daggerBlock[0]) * 16, 3)
                 }
               break
             }
@@ -517,6 +525,55 @@ export class HomePage {
         }
       }
     }
+  }
+
+  coinDrop(x: number, y: number, q: number) {
+    this.money += q
+    const chunkPos = {
+      x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
+      y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1
+    }
+    const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
+
+    const canvas: any = document.getElementById(`enemies${currentChunk.position.x}${currentChunk.position.y}`)
+    const context: CanvasRenderingContext2D = canvas.getContext('2d')
+
+    
+    const coin = new this.component(x + 4, y + 4, 288, 272, 8, 8, context)
+    coin.frame = 0
+    coin.animFrame = 0
+    coin.flyFrame = 0
+    coin.reDraw = () => {
+      if (coin.flyFrame < 50) {
+        if (coin.frame == 0) {
+          coin.sX = 288 + coin.animFrame * 8
+          coin.animFrame = (coin.animFrame + 1) % 4
+        }
+        coin.location.y -= coin.frame
+        coin.flyFrame ++
+        coin.frame = (coin.frame + 1) % 6
+
+        coin.context.drawImage(
+          coin.image, 
+          coin.sX, 
+          coin.sY, 
+          coin.width, 
+          coin.height, 
+          coin.location.x,
+          coin.location.y, 
+          coin.width, 
+          coin.height
+        )
+        coin.context.font = 'bold 8px Consolas'
+        coin.context.fillText(`+${q}`, coin.location.x + 12, coin.location.y + 10)
+
+        if (coin.flyFrame >= 49) {
+          this.componentsToDraw.splice(this.componentsToDraw.indexOf(coin), 1)
+        }
+      }
+    }
+    coin.init()
+    this.componentsToDraw.push(coin)
   }
 
   hashFunction(x: number, y: number, seed: number, biome: number): Array<Array<number>> {
