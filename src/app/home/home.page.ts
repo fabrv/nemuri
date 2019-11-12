@@ -167,7 +167,30 @@ export class HomePage {
     }, 100)
   }
 
+  loadGame () {
+    const seed = parseInt(localStorage.getItem('lastGame'))
+    const game = JSON.parse(localStorage.getItem(`${seed}`))
+    this.seed = seed
+    this.componentsToDraw[0].life = game.life
+    this.money = game.money
+
+    this.createChunks()
+
+    setTimeout(() => {
+      this.drawMap()
+      this.drawHud()
+      this.drawLoop()
+      this.drawEnemies()
+
+      this.mainMenu = false
+    }, 100)    
+  }
+
   createChunks () {
+    let savedChunks: any
+    if (localStorage.getItem(`${this.seed}`)) {
+      savedChunks = JSON.parse(localStorage.getItem(`${this.seed}`)).savedChunks
+    }
     let row = -1
     for (let i = 0; i < 9; i++) {
       if (i % 3 == 0) {
@@ -176,11 +199,23 @@ export class HomePage {
       const rateX = Math.abs((i % 3) - 1)
       const rateY = Math.abs(row - 1)
       
-      const newChunk = {
-        chunk: this.hashFunction(this.mod((i % 3) - 1, 255), this.mod(row - 1, 255), this.seed, this.mapRate(rateX, rateY)), 
-        position: {
-          x: ((i % 3) - 1) * (this.dimension * 50), 
-          y: (row - 1) * (this.dimension * 50)
+      let newChunk: any
+
+      let calcChunk = true
+
+      if (localStorage.getItem(`${this.seed}`)) {
+        if (savedChunks[`${((i % 3) - 1) * (this.dimension * 50)}-${(row - 1) * (this.dimension * 50)}`]) {
+          newChunk = savedChunks[`${((i % 3) - 1) * (this.dimension * 50)}-${(row - 1) * (this.dimension * 50)}`]
+          calcChunk = false
+        }
+      }
+      if (calcChunk) {
+        newChunk = {
+          chunk: this.hashFunction(this.mod((i % 3) - 1, 255), this.mod(row - 1, 255), this.seed, this.mapRate(rateX, rateY)), 
+          position: {
+            x: ((i % 3) - 1) * (this.dimension * 50), 
+            y: (row - 1) * (this.dimension * 50)
+          }
         }
       }
       this.chunks[i] = newChunk
@@ -795,11 +830,11 @@ export class HomePage {
   }
 
   move (x: number, y: number) {
-    /*if (x > 0) {
-      document.getElementById('player').classList.remove('player-inverted')
-    } else if (x < 0) {
-      document.getElementById('player').classList.add('player-inverted')
-    }*/
+    let savedChunks: any
+    if (localStorage.getItem(`${this.seed}`)) {
+      savedChunks = JSON.parse(localStorage.getItem(`${this.seed}`)).savedChunks
+    }
+    
     const chunkPos = {
       x: Math.floor((this.playerPos.x + x + (this.dimension * 25))/(this.dimension * 50)), 
       y: (Math.floor((this.playerPos.y + y + (this.dimension * 25))/(this.dimension * 50))) * -1
@@ -824,11 +859,25 @@ export class HomePage {
           for (let i = chunkPos.y - 1; i < chunkPos.y + 2; i++) {
             const rateX = Math.abs(chunkPos.x + 1 * Math.sign(x))
             const rateY = Math.abs(i)
-            const newChunk = {
-              chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), this.mod(i, 255), this.seed, this.mapRate(rateX, rateY)),
-              position: {
-                x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), 
-                y: i * (this.dimension * 50)
+
+            let newChunk: any
+
+            let calcChunk = true
+
+            if (localStorage.getItem(`${this.seed}`)) {
+              if (savedChunks[`${(chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50)}-${i * (this.dimension * 50)}`]) {
+                newChunk = savedChunks[`${(chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50)}-${i * (this.dimension * 50)}`]
+                calcChunk = false
+              }
+            }
+
+            if (calcChunk) {
+              newChunk = {
+                chunk: this.hashFunction(this.mod(chunkPos.x + 1 * Math.sign(x), 255), this.mod(i, 255), this.seed, this.mapRate(rateX, rateY)),
+                position: {
+                  x: (chunkPos.x + 1 * Math.sign(x)) * (this.dimension * 50), 
+                  y: i * (this.dimension * 50)
+                }
               }
             }
 
@@ -847,13 +896,28 @@ export class HomePage {
           for (let i = chunkPos.x - 1; i < chunkPos.x + 2; i++) {
             const rateX = Math.abs(i)
             const rateY = Math.abs(chunkPos.y - 1 * Math.sign(y))
-            const newChunk = {
-              chunk: this.hashFunction(this.mod(i, 255), this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, this.mapRate(rateX, rateY)), 
-              position: {
-                x: i * (this.dimension * 50), 
-                y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)
+
+            let newChunk: any
+
+            let calcChunk = true
+
+            if (localStorage.getItem(`${this.seed}`)) {
+              if (savedChunks[`${i * (this.dimension * 50)}-${(chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)}`]) {
+                newChunk = savedChunks[`${i * (this.dimension * 50)}-${(chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)}`]
+                calcChunk = false
               }
             }
+
+            if (calcChunk) {
+              newChunk = {
+                chunk: this.hashFunction(this.mod(i, 255), this.mod(chunkPos.y - 1 * Math.sign(y), 255), this.seed, this.mapRate(rateX, rateY)), 
+                position: {
+                  x: i * (this.dimension * 50), 
+                  y: (chunkPos.y - 1 * Math.sign(y)) * (this.dimension * 50)
+                }
+              }
+            }
+            
 
             this.chunks.push(newChunk)
             setTimeout(() => {

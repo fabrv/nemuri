@@ -1,7 +1,7 @@
 <ion-content>
   <div *ngIf="mainMenu" id="main-menu">
     <ul>
-      <li *ngIf="gameCreated"><a>Continue game</a></li>
+      <li *ngIf="gameCreated" (click)="loadGame()"><a>Continue game</a></li>
       <li><a (click)="createGame()">New game</a></li>
     </ul>
   </div>
