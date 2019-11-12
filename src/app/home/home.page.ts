@@ -35,10 +35,12 @@ export class HomePage {
     this.width = width
     this.height = height
     this.src = '../../assets/chars_tileset.png'
+    this.life = 3
     
     this.context = context
 
     this.location = {x: x, y: y}
+    this.position = {x: 0, y: y}
     this.image
     this.init = () => {
       this.image = new Image()
@@ -91,10 +93,11 @@ export class HomePage {
       for (let components in this.componentsToDraw) {
         this.componentsToDraw[components].reDraw()
       }
-      window.requestAnimationFrame(draw)
+      //window.requestAnimationFrame(draw)
     }
 
-    window.requestAnimationFrame(draw)
+    setInterval(draw, this.frameSpeed)
+    //window.requestAnimationFrame(draw)
   }
 
   fly = false
@@ -206,6 +209,19 @@ export class HomePage {
                 currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 15
                 this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
               break
+              case 16:
+                const enemy = this.componentsToDraw.find((element) => {
+                  return element.position.x == blockPos.x + daggerBlock[1] && element.position.y == blockPos.y + daggerBlock[0]
+                })
+                enemy.location.x += x * 1.5
+                enemy.location.y += y * 1.5
+                enemy.life -= 1
+                if (enemy.life == 0) {
+                  currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 1
+                  this.componentsToDraw.splice(this.componentsToDraw.indexOf(enemy), 1)
+                  clearInterval(enemy.interval)
+                }
+              break
             }
 
             frame = 8
@@ -280,7 +296,7 @@ export class HomePage {
     const canvas: any = document.getElementById(`enemies${currentChunk.position.x}${currentChunk.position.y}`)
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
 
-    for (let e = 0; e < 5; e++) {
+    for (let e = 0; e < 10; e++) {
       let position = {x: Math.floor(Math.random() * this.dimension), y: Math.floor(Math.random() * this.dimension)}
       while(currentChunk.chunk[position.y][position.x] != 1 && currentChunk.chunk[position.y][position.x] != 15) {
         position.x = (position.x + 1) % this.dimension
@@ -329,8 +345,13 @@ export class HomePage {
             }
 
             if (newSquareReached) {
+              currentChunk.chunk[fast.position.y][fast.position.x] = 1
+
               fast.position.x = minBlock.x
               fast.position.y = minBlock.y
+
+              currentChunk.chunk[fast.position.y][fast.position.x] = 16
+
               newSquareReached = false
             } else {
               const diff = {
@@ -358,7 +379,7 @@ export class HomePage {
           }
         }
 
-        setInterval(changeFrame, 1000/60)
+        fast.interval = setInterval(changeFrame, 1000/60)
       }
       fast.move()
 
