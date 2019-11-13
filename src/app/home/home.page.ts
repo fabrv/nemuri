@@ -24,7 +24,7 @@ export class HomePage {
   pauseMenu: boolean = false
   storeMenu: boolean = false
 
-  money: number = 15
+  money: number = 5
   trees: number = 0
 
   frameSpeed: number = 30
@@ -41,6 +41,8 @@ export class HomePage {
   witchSkullSound: any
 
   drawLoopInterval: any
+
+  lifes = 4
 
   sound = function (src: string, volume: number = 1) {
     this.sound = document.createElement("audio")
@@ -208,6 +210,7 @@ export class HomePage {
     const game = JSON.parse(localStorage.getItem(`${seed}`))
     this.seed = seed
     this.componentsToDraw[0].life = game.life
+    this.lifes = game.life
     this.money = game.money
     this.trees = game.trees
 
@@ -658,6 +661,7 @@ export class HomePage {
                   if (collisionCount == 0) {
                     this.damageSound.play()
                     this.componentsToDraw[0].life -= 1
+                    this.lifes = this.componentsToDraw[0].life
                     this.showHud = 0
                   }
                   collisionCount = (collisionCount + 1) % 2
@@ -753,6 +757,7 @@ export class HomePage {
           this.damageSound.play()
           this.componentsToDraw.splice(this.componentsToDraw.indexOf(skull), 1)
           this.componentsToDraw[0].life -= 1
+          this.lifes = this.componentsToDraw[0].life
           this.showHud = 0
         }
         
@@ -1037,6 +1042,7 @@ export class HomePage {
     this.move(0, 0)
 
     this.componentsToDraw[0].life = 4
+    this.lifes = this.componentsToDraw[0].life
   }
 
   pauseResume () {
@@ -1053,8 +1059,7 @@ export class HomePage {
     this.lastDirection.y = (y / y) * Math.sign(y) * -1 || 0
 
     if (this.lastDirection.x == 0 && this.lastDirection.y == 0) this.lastDirection.x = 1
-
-    console.log(this.lastDirection)
+    
     let savedChunks: any
     if (localStorage.getItem(`${this.seed}`)) {
       savedChunks = JSON.parse(localStorage.getItem(`${this.seed}`)).savedChunks
@@ -1151,7 +1156,11 @@ export class HomePage {
           }
         }
       }
-    } 
+    }
+    if (currentChunk.chunk[blockPos.y][blockPos.x] == 35) {
+      this.pauseResume()
+      this.storeMenu = true
+    }
   }
 
   plantTree () {
@@ -1168,6 +1177,7 @@ export class HomePage {
       
       if (currentChunk.chunk[pBlockPos.y + this.lastDirection.y][pBlockPos.x + this.lastDirection.x] == 1 || currentChunk.chunk[pBlockPos.y + this.lastDirection.y][pBlockPos.x + this.lastDirection.x] == 15) {
         if (!(pBlockPos.y + this.lastDirection.y == Math.floor(this.dimension / 2) && pBlockPos.x + this.lastDirection.x == Math.floor(this.dimension / 2))) {
+          this.witchSkullSound.play()
           currentChunk.chunk[pBlockPos.y + this.lastDirection.y][pBlockPos.x + this.lastDirection.x] = 14
           this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
           this.saveGame(currentChunk)

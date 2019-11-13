@@ -1,8 +1,30 @@
 <ion-content>
-  <div *ngIf="storeMenu">
+  <div *ngIf="storeMenu" class="overlay">
     <ul>
-      <li><a (click)="pauseMenu = false; pauseResume()">Resume</a></li>
-      <li><a (click)="pauseMenu = false; mainMenu = true">Return to main menu</a></li>
+      <li style="margin: 10px;"><h1 style="font-size: 40px;" class="gothic">Store</h1></li>
+      <li style="color: white; margin: 0;">
+        <img src="../../assets/coin8.png" style="transform: scale(2);">: {{money}} |
+        <img src="../../assets/heart8.png" style="transform: scale(2);">: {{lifes / 2}} |
+        <img src="../../assets/tree8.png" style="transform: scale(2);">: {{trees}}
+      </li>
+      <li *ngIf="money >= 4 && lifes <= 3">
+        <a (click)="money = money - 4; componentsToDraw[0].life = lifes + 1; lifes = componentsToDraw[0].life;">
+          4 <img src="../../assets/coin8.png" style="transform: scale(2);"> -> 1/2 <img src="../../assets/heart8.png" style="transform: scale(2);">
+        </a>
+      </li>
+      <li *ngIf="money >= 2">
+        <a (click)="money = money - 2; trees = trees + 1">
+          2 <img src="../../assets/coin8.png" style="transform: scale(2);">  -> 1 <img src="../../assets/tree8.png" style="transform: scale(2);">
+        </a>
+      </li>
+      <li *ngIf="trees >= 1">
+        <a (click)="money = money + 2; trees = trees - 1">
+          1 <img src="../../assets/tree8.png" style="transform: scale(2);">  -> 2 <img src="../../assets/coin8.png" style="transform: scale(2);">
+        </a>
+      </li>
+      <li>
+        <a (click)="storeMenu = false; pauseResume(); saveGame();">Resume game</a>
+      </li>
     </ul>
   </div>
   <div *ngIf="pauseMenu" class="overlay">
