@@ -1,4 +1,16 @@
 <ion-content>
+  <div *ngIf="storeMenu">
+    <ul>
+      <li><a (click)="pauseMenu = false; pauseResume()">Resume</a></li>
+      <li><a (click)="pauseMenu = false; mainMenu = true">Return to main menu</a></li>
+    </ul>
+  </div>
+  <div *ngIf="pauseMenu" class="overlay">
+    <ul>
+      <li><a (click)="pauseMenu = false; pauseResume()">Resume</a></li>
+      <li><a (click)="pauseMenu = false; mainMenu = true">Return to main menu</a></li>
+    </ul>
+  </div>
   <div *ngIf="dead" class="overlay">
     <ul>
       <li><h1 style="font-size: 40px" class="gothic">Game Over</h1></li>
@@ -17,7 +29,7 @@
   <div id="move-controls" class="controls">
     <div class="up" (tap)="move(0, 50);"></div>
     <div class="down" (click)="move(0, -50)"></div>
-    <div class="click" id="a-click"></div>
+    <div class="click" (click)="plantTree()" id="a-click"></div>
     <div class="left" (click)="move(-50, 0)"></div>
     <div class="right" (click)="move(50, 0)"></div>
   </div>
@@ -29,8 +41,8 @@
     <div class="left" (click)="throwDagger(-8,0)"></div>
     <div class="right" (click)="throwDagger(8,0)"></div>
   </div>
-  
-  <!--<canvas class="player" width="16px" height="24px" id="player"></canvas>-->
+
+  <div id="pause-control" (click)="pauseMenu = true; pauseResume()"></div>
   
   <canvas id="components" width="128px" height="128px"></canvas>
 

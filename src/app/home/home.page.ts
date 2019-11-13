@@ -17,11 +17,15 @@ export class HomePage {
   gameState: boolean = false
   showHud: number = 0
   gameCreated: boolean = false
+  lastDirection: {x: number, y: number} = {x: 1, y: 0}
 
   mainMenu: boolean = true
   dead: boolean = false
+  pauseMenu: boolean = false
+  storeMenu: boolean = false
 
   money: number = 15
+  trees: number = 0
 
   frameSpeed: number = 30
 
@@ -108,7 +112,8 @@ export class HomePage {
     }
   }
 
-  drawLoop () {    
+  drawLoop () {
+    this.backgroundMusic.play()
     const pCanvas: any = document.getElementById('components')
     const pContext: CanvasRenderingContext2D = pCanvas.getContext('2d')
 
@@ -172,6 +177,10 @@ export class HomePage {
         break
         case 37:
           this.throwDagger(-8,0)
+          break
+        case 27:
+          this.pauseMenu = !this.pauseMenu
+          this.pauseResume()
         break
       }
       //console.log(event.keyCode)
@@ -200,6 +209,7 @@ export class HomePage {
     this.seed = seed
     this.componentsToDraw[0].life = game.life
     this.money = game.money
+    this.trees = game.trees
 
     this.createChunks()
 
@@ -270,7 +280,7 @@ export class HomePage {
       this.backgroundMusic.sound.play()
 
       this.backgroundMusic.sound.onended = () => {
-        this.backgroundMusic.currentSong ++
+        this.backgroundMusic.currentSong = (this.backgroundMusic.currentSong + 1) % bgMusic.length
         this.backgroundMusic.sound.src = bgMusic[this.backgroundMusic.currentSong]
         this.backgroundMusic.sound.play()
       }
@@ -287,6 +297,11 @@ export class HomePage {
   }
 
   throwDagger (x: number, y: number) {
+    this.lastDirection.x = (x / x) * Math.sign(x) || 0
+    this.lastDirection.y = (y / y) * Math.sign(y) * -1 || 0
+
+    if (this.lastDirection.x == 0 && this.lastDirection.y == 0) this.lastDirection.x = 1
+
     const canvas: any = document.getElementById('components')
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
 
@@ -332,6 +347,8 @@ export class HomePage {
                   this.coinDrop((blockPos.x + daggerBlock[1]) * 16, (blockPos.y + daggerBlock[0]) * 16, 1)
                 } else if (randCoin > 0.9) {
                   this.coinDrop((blockPos.x + daggerBlock[1]) * 16, (blockPos.y + daggerBlock[0]) * 16, 2)
+                } else if (randCoin > 0.2 && randCoin < 0.3) {
+                  this.coinDrop((blockPos.x + daggerBlock[1]) * 16, (blockPos.y + daggerBlock[0]) * 16, 1, 8)
                 }
                 currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 15
                 this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
@@ -485,6 +502,39 @@ export class HomePage {
     }
     coin.init()
     this.componentsToDraw.push(coin)
+
+
+    const tree = new this.component(this.playerAreaDimension / 2 - 10, this.playerAreaDimension / 2 + 15, 288, 272 + 8, 8, 8, context)
+    tree.frame = 0
+    tree.animFrame = 0
+    tree.reDraw = () => {
+      if (this.showHud < 150) {
+        this.fly = true
+        if (tree.frame == 0) {
+          tree.sX = 288 + tree.animFrame * 8
+          tree.animFrame = (tree.animFrame + 1) % 4
+        }
+        tree.frame = (tree.frame + 1) % 6
+
+        tree.context.drawImage(
+          tree.image, 
+          tree.sX, 
+          tree.sY, 
+          tree.width, 
+          tree.height, 
+          tree.location.x,
+          tree.location.y, 
+          tree.width, 
+          tree.height
+        )
+        tree.context.font = 'bold 8px Consolas'
+        tree.context.fillText(this.trees, this.playerAreaDimension / 2, this.playerAreaDimension / 2 + 22)
+      } else {
+        this.fly = false
+      }
+    }
+    tree.init()
+    this.componentsToDraw.push(tree)
   }
 
   drawMap () {
@@ -552,106 +602,108 @@ export class HomePage {
         let newSquareReached = true
         let collisionCount = 1
         const changeFrame = () => {
-          const pBlockPos = {
-            x: this.mod((this.playerPos.x) / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
-            y: (this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
-          }
-
-          //console.log(pBlockPos)
-          const distance = this.distance(enemy.position.x, pBlockPos.x, enemy.position.y, pBlockPos.y)
-          if (distance < 6) {
-            switch (enemy.type) {
-              case 'fast':
-                enemy.animCycle = [3, 4, 5, 6, 7]
-                break
-              case 'witch':
-                enemy.animCycle = [0, 1, 2, 3]
-                if (enemy.skullFrame == 0 && distance < 4) {
-                  this.throwSkull(enemy.location.x, enemy.location.y)
-                }
-                enemy.skullFrame = (enemy.skullFrame + 1) % 55
-                break
+          if (this.gameState) {
+            const pBlockPos = {
+              x: this.mod((this.playerPos.x) / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
+              y: (this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
             }
 
-            let minBlock: {x: number, y: number}
-            let minDistance = 100
-            const blocks = [
-              {x: 1, y: 0},
-              {x: -1, y: 0},
-              {x: 0, y: 1},
-              {x: 0, y: -1},
-              {x: 0, y: 0}
-            ]
-            for (let block in blocks) {
-              const adder = blocks[block]
-              try {
-                if ((currentChunk.chunk[enemy.position.y + adder.y][enemy.position.x + adder.x] == 1 || currentChunk.chunk[enemy.position.y + adder.y][enemy.position.x + adder.x] == 15) && (this.distance(enemy.position.x + adder.x, pBlockPos.x, enemy.position.y + adder.y, pBlockPos.y) < minDistance)) {
-                  if (enemy.type == 'witch') {
-                    minDistance = this.distance(enemy.position.x + adder.x, pBlockPos.x - 2, enemy.position.y + adder.y, pBlockPos.y - 2)
-                  } else {
-                    minDistance = this.distance(enemy.position.x + adder.x, pBlockPos.x, enemy.position.y + adder.y, pBlockPos.y)
+            //console.log(pBlockPos)
+            const distance = this.distance(enemy.position.x, pBlockPos.x, enemy.position.y, pBlockPos.y)
+            if (distance < 6) {
+              switch (enemy.type) {
+                case 'fast':
+                  enemy.animCycle = [3, 4, 5, 6, 7]
+                  break
+                case 'witch':
+                  enemy.animCycle = [0, 1, 2, 3]
+                  if (enemy.skullFrame == 0 && distance < 4) {
+                    this.throwSkull(enemy.location.x, enemy.location.y)
                   }
-                  minBlock = {x: enemy.position.x + adder.x, y: enemy.position.y + adder.y}
+                  enemy.skullFrame = (enemy.skullFrame + 1) % 55
+                  break
+              }
+
+              let minBlock: {x: number, y: number}
+              let minDistance = 100
+              const blocks = [
+                {x: 1, y: 0},
+                {x: -1, y: 0},
+                {x: 0, y: 1},
+                {x: 0, y: -1},
+                {x: 0, y: 0}
+              ]
+              for (let block in blocks) {
+                const adder = blocks[block]
+                try {
+                  if ((currentChunk.chunk[enemy.position.y + adder.y][enemy.position.x + adder.x] == 1 || currentChunk.chunk[enemy.position.y + adder.y][enemy.position.x + adder.x] == 15) && (this.distance(enemy.position.x + adder.x, pBlockPos.x, enemy.position.y + adder.y, pBlockPos.y) < minDistance)) {
+                    if (enemy.type == 'witch') {
+                      minDistance = this.distance(enemy.position.x + adder.x, pBlockPos.x - 2, enemy.position.y + adder.y, pBlockPos.y - 2)
+                    } else {
+                      minDistance = this.distance(enemy.position.x + adder.x, pBlockPos.x, enemy.position.y + adder.y, pBlockPos.y)
+                    }
+                    minBlock = {x: enemy.position.x + adder.x, y: enemy.position.y + adder.y}
+                  }
+                } catch (error) {}
+              }
+
+              if (newSquareReached) {
+                const blockPos = {
+                  x: this.mod(this.playerPos.x / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
+                  y: (this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
                 }
-              } catch (error) {}
-            }
-
-            if (newSquareReached) {
-              const blockPos = {
-                x: this.mod(this.playerPos.x / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
-                y: (this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
-              }
-              
-              if (blockPos.x == minBlock.x && blockPos.y == minBlock.y) {
-                // DAMAGE TO PLAYER
-                if (collisionCount == 0) {
-                  this.damageSound.play()
-                  this.componentsToDraw[0].life -= 1
-                  this.showHud = 0
+                
+                if (blockPos.x == minBlock.x && blockPos.y == minBlock.y) {
+                  // DAMAGE TO PLAYER
+                  if (collisionCount == 0) {
+                    this.damageSound.play()
+                    this.componentsToDraw[0].life -= 1
+                    this.showHud = 0
+                  }
+                  collisionCount = (collisionCount + 1) % 2
                 }
-                collisionCount = (collisionCount + 1) % 2
-              }
-              if (currentChunk.chunk[enemy.position.y][enemy.position.x] != 17) {
-                currentChunk.chunk[enemy.position.y][enemy.position.x] = 1
-              }
+                if (currentChunk.chunk[enemy.position.y][enemy.position.x] != 17) {
+                  currentChunk.chunk[enemy.position.y][enemy.position.x] = 1
+                }
 
-              enemy.position.x = minBlock.x
-              enemy.position.y = minBlock.y
+                enemy.position.x = minBlock.x
+                enemy.position.y = minBlock.y
 
-              currentChunk.chunk[enemy.position.y][enemy.position.x] = 16
+                currentChunk.chunk[enemy.position.y][enemy.position.x] = 16
 
-              newSquareReached = false
+                newSquareReached = false
 
-              if (this.componentsToDraw[0].life <= 0) {
-                currentChunk.chunk[blockPos.y][blockPos.x] = 17
-                this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
-                newSquareReached = true
-                this.money = Math.ceil(this.money / 2)
-                this.respawn()
+                if (this.componentsToDraw[0].life <= 0) {
+                  currentChunk.chunk[blockPos.y][blockPos.x] = 17
+                  this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
+                  newSquareReached = true
+                  this.money = Math.ceil(this.money / 2)
+                  this.respawn()
+                }
+              } else {
+                const diff = {
+                  x: (enemy.location.x - (enemy.position.x * 16)) / 16,
+                  y: (enemy.location.y - (enemy.position.y * 16)) / 16
+                }
+
+                enemy.location.x -= Math.sign(diff.x) * (diff.x / diff.x || 1)
+                enemy.location.y -= Math.sign(diff.y) * (diff.y / diff.y || 1)
+
+                if ((enemy.location.x == enemy.position.x * 16) && (enemy.location.y == enemy.position.y * 16)) {
+                  enemy.location.x = enemy.position.x * 16
+                  enemy.location.y = enemy.position.y * 16
+                  newSquareReached = true
+                }
               }
             } else {
-              const diff = {
-                x: (enemy.location.x - (enemy.position.x * 16)) / 16,
-                y: (enemy.location.y - (enemy.position.y * 16)) / 16
-              }
-
-              enemy.location.x -= Math.sign(diff.x) * (diff.x / diff.x || 1)
-              enemy.location.y -= Math.sign(diff.y) * (diff.y / diff.y || 1)
-
-              if ((enemy.location.x == enemy.position.x * 16) && (enemy.location.y == enemy.position.y * 16)) {
-                enemy.location.x = enemy.position.x * 16
-                enemy.location.y = enemy.position.y * 16
-                newSquareReached = true
-              }
+              enemy.animCycle = [1, 2, 3]
             }
-          } else {
-            enemy.animCycle = [1, 2, 3]
-          }
 
-          frame = (frame + 1) % 9
-          if (frame === 0) {
-            enemy.sX = 368 + (16 * enemy.animCycle[currentSprite])
-            currentSprite = (currentSprite + 1) % enemy.animCycle.length
+            frame = (frame + 1) % 9
+            if (frame === 0) {
+              enemy.sX = 368 + (16 * enemy.animCycle[currentSprite])
+              currentSprite = (currentSprite + 1) % enemy.animCycle.length
+            }
           }
         }
 
@@ -768,10 +820,14 @@ export class HomePage {
     }
   }
 
-  coinDrop(x: number, y: number, q: number) {
+  coinDrop(x: number, y: number, q: number, treeMod: number = 0) {
     this.collectSound.play()
 
-    this.money += q
+    if (treeMod > 0) {
+      this.trees += 1
+    } else {
+      this.money += q
+    }
     const chunkPos = {
       x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
       y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1
@@ -782,7 +838,7 @@ export class HomePage {
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
 
     
-    const coin = new this.component(x + 4, y + 4, 288, 272, 8, 8, context)
+    const coin = new this.component(x + 4, y + 4, 288, 272 + treeMod, 8, 8, context)
     coin.frame = 0
     coin.animFrame = 0
     coin.flyFrame = 0
@@ -993,6 +1049,12 @@ export class HomePage {
   }
 
   move (x: number, y: number) {
+    this.lastDirection.x = (x / x) * Math.sign(x) || 0
+    this.lastDirection.y = (y / y) * Math.sign(y) * -1 || 0
+
+    if (this.lastDirection.x == 0 && this.lastDirection.y == 0) this.lastDirection.x = 1
+
+    console.log(this.lastDirection)
     let savedChunks: any
     if (localStorage.getItem(`${this.seed}`)) {
       savedChunks = JSON.parse(localStorage.getItem(`${this.seed}`)).savedChunks
@@ -1092,6 +1154,29 @@ export class HomePage {
     } 
   }
 
+  plantTree () {
+    if (this.trees > 0) {
+      const chunkPos = {
+        x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
+        y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1
+      }
+      const pBlockPos = {
+        x: this.mod((this.playerPos.x) / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
+        y: (this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
+      }
+      const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
+      
+      if (currentChunk.chunk[pBlockPos.y + this.lastDirection.y][pBlockPos.x + this.lastDirection.x] == 1 || currentChunk.chunk[pBlockPos.y + this.lastDirection.y][pBlockPos.x + this.lastDirection.x] == 15) {
+        if (!(pBlockPos.y + this.lastDirection.y == Math.floor(this.dimension / 2) && pBlockPos.x + this.lastDirection.x == Math.floor(this.dimension / 2))) {
+          currentChunk.chunk[pBlockPos.y + this.lastDirection.y][pBlockPos.x + this.lastDirection.x] = 14
+          this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
+          this.saveGame(currentChunk)
+          this.trees -= 1
+        }
+      }
+    }
+  }
+
   distance (x1: number, x2: number, y1: number, y2: number) {
     return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
   }
@@ -1102,7 +1187,8 @@ export class HomePage {
       money: this.money,
       playerPos: this.playerPos,
       life: this.componentsToDraw[0].life,
-      seed: this.seed
+      seed: this.seed,
+      trees: this.trees
     }
 
     if (localStorage.getItem(this.seed.toString())) {

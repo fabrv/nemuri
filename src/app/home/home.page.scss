@@ -81,6 +81,35 @@ canvas {
   right: 10%;
 }
 
+#pause-control {
+  background-color: #483b3a;
+  padding: 15px;
+  border-right: solid 2px #775C55;
+  border-bottom: solid 2px #775C55;
+  border-top: solid 2px #222222;
+  border-left: solid 2px #222222;
+
+  color: white;
+
+  width: 40px;
+  height: 40px;
+
+  position: fixed;
+  top: 15px;
+  right: 15px;
+
+  z-index: 100;
+}
+
+#pause-control::after {
+  content: "❚❚";
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+}
+
 .controls{
   z-index: 200;
   position: fixed;
