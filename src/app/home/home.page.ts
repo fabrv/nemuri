@@ -14,11 +14,12 @@ export class HomePage {
   playerPos: {x: number, y: number} = {x: 0, y: 0}
   seed:number = 34
   dimension: number = 35
-  pressed: boolean = false
+  gameState: boolean = false
   showHud: number = 0
   gameCreated: boolean = false
 
-  mainMenu = true
+  mainMenu: boolean = true
+  dead: boolean = false
 
   money: number = 15
 
@@ -27,6 +28,31 @@ export class HomePage {
   playerAreaDimension: number = 128
 
   componentsToDraw: Array<any> = []
+
+  backgroundMusic: any
+
+  collectSound: any
+  damageSound: any
+  enemyDamageSound: any
+  witchSkullSound: any
+
+  drawLoopInterval: any
+
+  sound = function (src: string, volume: number = 1) {
+    this.sound = document.createElement("audio")
+    this.sound.src = src
+    this.sound.volume = volume
+    this.sound.setAttribute("preload", "auto")
+    this.sound.setAttribute("controls", "none")
+    this.sound.style.display = "none"
+    document.body.appendChild(this.sound)
+    this.play = function(){
+      this.sound.play()
+    }
+    this.stop = function(){
+      this.sound.pause()
+    }
+  }
 
   component = function (x: number, 
                         y: number,
@@ -102,7 +128,8 @@ export class HomePage {
       //window.requestAnimationFrame(draw)
     }
 
-    setInterval(draw, this.frameSpeed)
+    this.drawLoopInterval = setInterval(draw, this.frameSpeed)
+    this.gameState = true
     //window.requestAnimationFrame(draw)
   }
 
@@ -183,7 +210,7 @@ export class HomePage {
       this.drawEnemies()
 
       this.mainMenu = false
-    }, 100)    
+    }, 10)    
   }
 
   createChunks () {
@@ -225,9 +252,37 @@ export class HomePage {
   ngAfterViewInit() {
     this.drawMap()
     this.drawMainCharacter()
-    //this.drawHud()
-    //this.drawLoop()
-    //this.drawEnemies()
+    
+    const bgMusic = [
+      '/assets/music/02store2.wav',
+      '/assets/music/02store1.wav',
+      '/assets/music/01town0.wav',
+      '/assets/music/01town1.wav',
+      '/assets/music/01town1.wav',
+      '/assets/music/04forest1.wav',
+      '/assets/music/04forest3.wav',
+      '/assets/music/08travel1.wav'
+    ]
+
+    this.backgroundMusic = new this.sound('/assets/music/02store2.wav', 0.5)
+    this.backgroundMusic.currentSong = 0
+    this.backgroundMusic.play = () => {
+      this.backgroundMusic.sound.play()
+
+      this.backgroundMusic.sound.onended = () => {
+        this.backgroundMusic.currentSong ++
+        this.backgroundMusic.sound.src = bgMusic[this.backgroundMusic.currentSong]
+        this.backgroundMusic.sound.play()
+      }
+    }
+
+    this.collectSound = new this.sound('/assets/music/Fruit collect 1.wav')
+    this.damageSound = new this.sound('/assets/music/Hit damage 1.wav')
+    this.enemyDamageSound = new this.sound('/assets/music/Boss hit 1.wav')
+    this.witchSkullSound = new this.sound('/assets/music/Balloon Pop 1.wav')
+
+    this.backgroundMusic.play()
+
     this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE)
   }
 
@@ -268,6 +323,7 @@ export class HomePage {
 
           const collisionElems = [14, 16]
           if (collisionElems.includes(currentBlock)) {
+            this.enemyDamageSound.play()
             // DAGGER COLLISION
             switch (currentBlock){
               case 14:
@@ -294,7 +350,7 @@ export class HomePage {
                   this.componentsToDraw.splice(this.componentsToDraw.indexOf(enemy), 1)
                   clearInterval(enemy.interval)
 
-                  this.coinDrop((blockPos.x + daggerBlock[1]) * 16, (blockPos.y + daggerBlock[0]) * 16, 3)
+                  this.coinDrop((blockPos.x + daggerBlock[1]) * 16, (blockPos.y + daggerBlock[0]) * 16, enemy.money)
                 }
               break
             }
@@ -452,7 +508,7 @@ export class HomePage {
     this.chunks[4].chunk[10][9] = 1
   }
 
-  drawEnemies () {
+  drawEnemies (wavesize: number = 10) {
     const chunkPos = {
       x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
       y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1
@@ -462,22 +518,36 @@ export class HomePage {
     const canvas: any = document.getElementById(`enemies${currentChunk.position.x}${currentChunk.position.y}`)
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
 
-    for (let e = 0; e < 5; e++) {
+    for (let e = 0; e < wavesize; e++) {
       let position = {x: Math.floor(Math.random() * this.dimension), y: Math.floor(Math.random() * this.dimension)}
       while(currentChunk.chunk[position.y][position.x] != 1 && currentChunk.chunk[position.y][position.x] != 15) {
         position.x = (position.x + 1) % this.dimension
       }
       //console.log(currentChunk.chunk[position.y][position.x])
       
-      const fast = new this.component(position.x * 16, position.y * 16, 368, 20, 16, 16, context)
+      const enemy = new this.component(position.x * 16, position.y * 16, 368, 20, 16, 16, context)
+      
       currentChunk.chunk[position.y][position.x] = 16
-      fast.init()
-      fast.position = {x: position.x, y: position.y}
-      fast.animCycle = [1, 2, 3]
-      fast.move = () => {
-        // fast.animCycle = [3, 4, 5, 6, 7]
-        // fast.fast.animCycle = [1, 2, 3]
-        let currentSprite = Math.floor(Math.random() * fast.animCycle.length)
+      enemy.init()
+      enemy.position = {x: position.x, y: position.y}
+      enemy.animCycle = [1, 2, 3]
+      enemy.type = 'fast'
+      enemy.money = 3
+
+      if (Math.random() < 0.3) {
+        enemy.sX = 368
+        enemy.sY = 271
+        enemy.animCycle = [0, 1]
+        enemy.type = 'witch'
+        enemy.life = 2
+        enemy.money = 5
+        enemy.skullFrame = 0
+      }
+      
+      enemy.move = () => {
+        // enemy.animCycle = [3, 4, 5, 6, 7]
+        // enemy.enemy.animCycle = [1, 2, 3]
+        let currentSprite = Math.floor(Math.random() * enemy.animCycle.length)
         let frame = 0
         let newSquareReached = true
         let collisionCount = 1
@@ -488,9 +558,20 @@ export class HomePage {
           }
 
           //console.log(pBlockPos)
-          const distance = this.distance(fast.position.x, pBlockPos.x, fast.position.y, pBlockPos.y)
+          const distance = this.distance(enemy.position.x, pBlockPos.x, enemy.position.y, pBlockPos.y)
           if (distance < 6) {
-            fast.animCycle = [3, 4, 5, 6, 7]
+            switch (enemy.type) {
+              case 'fast':
+                enemy.animCycle = [3, 4, 5, 6, 7]
+                break
+              case 'witch':
+                enemy.animCycle = [0, 1, 2, 3]
+                if (enemy.skullFrame == 0 && distance < 4) {
+                  this.throwSkull(enemy.location.x, enemy.location.y)
+                }
+                enemy.skullFrame = (enemy.skullFrame + 1) % 55
+                break
+            }
 
             let minBlock: {x: number, y: number}
             let minDistance = 100
@@ -504,9 +585,13 @@ export class HomePage {
             for (let block in blocks) {
               const adder = blocks[block]
               try {
-                if ((currentChunk.chunk[fast.position.y + adder.y][fast.position.x + adder.x] == 1 || currentChunk.chunk[fast.position.y + adder.y][fast.position.x + adder.x] == 15) && (this.distance(fast.position.x + adder.x, pBlockPos.x, fast.position.y + adder.y, pBlockPos.y) < minDistance)) {
-                  minDistance = this.distance(fast.position.x + adder.x, pBlockPos.x, fast.position.y + adder.y, pBlockPos.y)
-                  minBlock = {x: fast.position.x + adder.x, y: fast.position.y + adder.y}
+                if ((currentChunk.chunk[enemy.position.y + adder.y][enemy.position.x + adder.x] == 1 || currentChunk.chunk[enemy.position.y + adder.y][enemy.position.x + adder.x] == 15) && (this.distance(enemy.position.x + adder.x, pBlockPos.x, enemy.position.y + adder.y, pBlockPos.y) < minDistance)) {
+                  if (enemy.type == 'witch') {
+                    minDistance = this.distance(enemy.position.x + adder.x, pBlockPos.x - 2, enemy.position.y + adder.y, pBlockPos.y - 2)
+                  } else {
+                    minDistance = this.distance(enemy.position.x + adder.x, pBlockPos.x, enemy.position.y + adder.y, pBlockPos.y)
+                  }
+                  minBlock = {x: enemy.position.x + adder.x, y: enemy.position.y + adder.y}
                 }
               } catch (error) {}
             }
@@ -520,19 +605,20 @@ export class HomePage {
               if (blockPos.x == minBlock.x && blockPos.y == minBlock.y) {
                 // DAMAGE TO PLAYER
                 if (collisionCount == 0) {
+                  this.damageSound.play()
                   this.componentsToDraw[0].life -= 1
                   this.showHud = 0
                 }
                 collisionCount = (collisionCount + 1) % 2
               }
-              if (currentChunk.chunk[fast.position.y][fast.position.x] != 17) {
-                currentChunk.chunk[fast.position.y][fast.position.x] = 1
+              if (currentChunk.chunk[enemy.position.y][enemy.position.x] != 17) {
+                currentChunk.chunk[enemy.position.y][enemy.position.x] = 1
               }
 
-              fast.position.x = minBlock.x
-              fast.position.y = minBlock.y
+              enemy.position.x = minBlock.x
+              enemy.position.y = minBlock.y
 
-              currentChunk.chunk[fast.position.y][fast.position.x] = 16
+              currentChunk.chunk[enemy.position.y][enemy.position.x] = 16
 
               newSquareReached = false
 
@@ -540,40 +626,101 @@ export class HomePage {
                 currentChunk.chunk[blockPos.y][blockPos.x] = 17
                 this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
                 newSquareReached = true
+                this.money = Math.ceil(this.money / 2)
                 this.respawn()
               }
             } else {
               const diff = {
-                x: (fast.location.x - (fast.position.x * 16)) / 16,
-                y: (fast.location.y - (fast.position.y * 16)) / 16
+                x: (enemy.location.x - (enemy.position.x * 16)) / 16,
+                y: (enemy.location.y - (enemy.position.y * 16)) / 16
               }
 
-              fast.location.x -= Math.sign(diff.x) * (diff.x / diff.x || 1)
-              fast.location.y -= Math.sign(diff.y) * (diff.y / diff.y || 1)
+              enemy.location.x -= Math.sign(diff.x) * (diff.x / diff.x || 1)
+              enemy.location.y -= Math.sign(diff.y) * (diff.y / diff.y || 1)
 
-              if ((fast.location.x == fast.position.x * 16) && (fast.location.y == fast.position.y * 16)) {
-                fast.location.x = fast.position.x * 16
-                fast.location.y = fast.position.y * 16
+              if ((enemy.location.x == enemy.position.x * 16) && (enemy.location.y == enemy.position.y * 16)) {
+                enemy.location.x = enemy.position.x * 16
+                enemy.location.y = enemy.position.y * 16
                 newSquareReached = true
               }
             }
           } else {
-            fast.animCycle = [1, 2, 3]
+            enemy.animCycle = [1, 2, 3]
           }
 
           frame = (frame + 1) % 9
           if (frame === 0) {
-            fast.sX = 368 + (16 * fast.animCycle[currentSprite])
-            currentSprite = (currentSprite + 1) % fast.animCycle.length
+            enemy.sX = 368 + (16 * enemy.animCycle[currentSprite])
+            currentSprite = (currentSprite + 1) % enemy.animCycle.length
           }
         }
 
-        fast.interval = setInterval(changeFrame, 1000/60)
+        enemy.interval = setInterval(changeFrame, 1000/60)
       }
-      fast.move()
+      enemy.move()
 
-      this.componentsToDraw.push(fast)
+      this.componentsToDraw.push(enemy)
     }
+  }
+
+  throwSkull (x: number, y: number) {
+    const chunkPos = {
+      x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
+      y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1
+    }
+    const pBlockPos = {
+      x: this.mod((this.playerPos.x) / 50 + (Math.floor(this.dimension / 2)), this.dimension), 
+      y: (this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension) 
+    }
+    const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
+    
+    const canvas: any = document.getElementById(`enemies${currentChunk.position.x}${currentChunk.position.y}`)
+    const context: CanvasRenderingContext2D = canvas.getContext('2d')
+
+    const skull = new this.component(x + 6, y + 6, 229, 231, 6, 6, context)
+    skull.dist = 0
+    skull.init()
+    const throwVector = {x: pBlockPos.x - (x / 16), y: pBlockPos.y - (y / 16)}
+
+    skull.reDraw = () => {
+      if (skull.dist < 64) {
+        skull.location.x += throwVector.x
+        skull.location.y += throwVector.y
+
+        skull.dist += Math.sqrt(Math.pow(throwVector.x, 2) + Math.pow(throwVector.y, 2))
+
+        // SKULL COLLISSION
+        const playerPos = {
+          x: (this.mod((this.playerPos.x) / 50 + (Math.floor(this.dimension / 2)), this.dimension)) * 16 + 6, 
+          y: ((this.dimension - 1) - this.mod((this.playerPos.y) / 50 + (Math.floor(this.dimension / 2)), this.dimension)) * 16 + 6 
+        }
+        const vector = {x: playerPos.x - skull.location.x, y: playerPos.y - skull.location.y}
+        const collissionDistance = Math.sqrt(Math.pow(vector.x, 2) + Math.pow(vector.y, 2))
+        
+        if (collissionDistance < 16) {
+          this.damageSound.play()
+          this.componentsToDraw.splice(this.componentsToDraw.indexOf(skull), 1)
+          this.componentsToDraw[0].life -= 1
+          this.showHud = 0
+        }
+        
+        skull.context.drawImage(
+          skull.image, 
+          skull.sX, 
+          skull.sY, 
+          skull.width, 
+          skull.height, 
+          skull.location.x,
+          skull.location.y, 
+          skull.width, 
+          skull.height
+        )
+      } else {
+        this.componentsToDraw.splice(this.componentsToDraw.indexOf(skull), 1)
+      }
+    }
+
+    this.componentsToDraw.push(skull)
   }
 
   drawChunk(canvasId: string, map: any) {
@@ -622,6 +769,8 @@ export class HomePage {
   }
 
   coinDrop(x: number, y: number, q: number) {
+    this.collectSound.play()
+
     this.money += q
     const chunkPos = {
       x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
@@ -822,11 +971,25 @@ export class HomePage {
   }
 
   respawn () {
+    this.dead = true
+    this.backgroundMusic.sound.src = '/assets/music/13gameover1V1NL.wav'
+    this.backgroundMusic.play()
+    this.pauseResume()
+
     this.playerPos.x = 0
     this.playerPos.y = 0
     this.move(0, 0)
 
     this.componentsToDraw[0].life = 4
+  }
+
+  pauseResume () {
+    if (this.gameState) {
+      clearInterval(this.drawLoopInterval)
+      this.gameState = false
+    } else {
+      this.drawLoop()
+    }
   }
 
   move (x: number, y: number) {

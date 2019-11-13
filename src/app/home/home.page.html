@@ -1,6 +1,14 @@
 <ion-content>
-  <div *ngIf="mainMenu" id="main-menu">
+  <div *ngIf="dead" class="overlay">
     <ul>
+      <li><h1 style="font-size: 40px" class="gothic">Game Over</h1></li>
+      <li><a (click)="dead = false; pauseResume()">Respawn</a></li>
+      <li><a (click)="dead = false; mainMenu = true">Return to main menu</a></li>
+    </ul>
+  </div>
+  <div *ngIf="mainMenu" class="overlay" id="main-menu">
+    <ul>
+        <li><h1 style="font-size: 40px" class="gothic">Okite</h1></li>
       <li *ngIf="gameCreated" (click)="loadGame()"><a>Continue game</a></li>
       <li><a (click)="createGame()">New game</a></li>
     </ul>
