@@ -43,6 +43,18 @@ export class HomePage {
 
   lifes = 4
 
+  muteText: string = "Mute"
+
+  muteUnmute () {
+    if (this.backgroundMusic.sound.volume == 0.5) {
+      this.backgroundMusic.sound.volume = 0
+      this.muteText = "Unmute"
+    } else {
+      this.backgroundMusic.sound.volume = 0.5
+      this.muteText = "Mute"
+    }
+  }
+
   sound = function (src: string, volume: number = 1) {
     this.sound = document.createElement("audio")
     this.sound.src = src
@@ -276,7 +288,7 @@ export class HomePage {
       '/assets/music/08travel1.wav'
     ]
 
-    this.backgroundMusic = new this.sound('/assets/music/02store2.wav', 0.5)
+    this.backgroundMusic = new this.sound('/assets/music/02store2.wav', 0.4)
     this.backgroundMusic.currentSong = 0
     this.backgroundMusic.play = () => {
       this.backgroundMusic.sound.play()
@@ -1158,6 +1170,19 @@ export class HomePage {
     }
   }
 
+  dPadTimers = []
+
+  holdMoveStart (d: number, x: number, y: number) {
+    this.move(x, y)
+    this.dPadTimers[d] = setInterval(() => {
+      this.move(x, y)
+    }, 200)
+  }
+
+  holdMoveStop (d: number) {
+    clearInterval(this.dPadTimers[d])
+  }
+
   controllersP0: any = {}
   controllersIntervals: any = {}
   controllersParams: Array<{x: number, y: number}> = [{x: 0, y: 0}, {x: 0, y: 0}]
@@ -1170,7 +1195,7 @@ export class HomePage {
       case 'a-click':
           this.controllersIntervals[`${target.id}`] = setInterval(() => {
             this.move(this.controllersParams[0].x, -this.controllersParams[0].y)
-          }, 200)
+          }, 100)
         break
       case 'b-click':
           this.controllersIntervals[`${target.id}`] = setInterval(() => {
@@ -1193,8 +1218,8 @@ export class HomePage {
     }
 
     const direction = {
-      x: Math.round(vector.x / 50) / Math.round(vector.x / 50) * Math.sign(Math.round(vector.x / 50)) || 0,
-      y: Math.round(vector.y / 50) / Math.round(vector.y / 50) * Math.sign(Math.round(vector.y / 50)) || 0
+      x: Math.round(vector.x / 40) / Math.round(vector.x / 40) * Math.sign(Math.round(vector.x / 40)) || 0,
+      y: Math.round(vector.y / 40) / Math.round(vector.y / 40) * Math.sign(Math.round(vector.y / 40)) || 0
     }
 
     switch (target.id) {
@@ -1267,6 +1292,7 @@ export class HomePage {
       game.savedChunks[`${chunkToSave.position.x}-${chunkToSave.position.y}`] = chunkToSave
     }    
 
+    localStorage.clear()
     localStorage.setItem(this.seed.toString(), JSON.stringify(game))
     localStorage.lastGame = this.seed
   }

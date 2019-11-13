@@ -30,6 +30,7 @@
   <div *ngIf="pauseMenu" class="overlay">
     <ul>
       <li><a (click)="pauseMenu = false; pauseResume()">Resume</a></li>
+      <li><a (click)="muteUnmute()">{{muteText}}</a></li>
       <li><a (click)="pauseMenu = false; mainMenu = true">Return to main menu</a></li>
     </ul>
   </div>
@@ -49,11 +50,11 @@
   </div>
 
   <div id="move-controls" class="controls">
-    <div class="up" (touchstart)="move(0, 1);"></div>
-    <div class="down" (touchstart)="move(0, -1)"></div>
+    <div class="up" (touchstart)="holdMoveStart(0, 0, 1);" (touchend)="holdMoveStop(0)"></div>
+    <div class="down" (touchstart)="holdMoveStart(1, 0, -1);" (touchend)="holdMoveStop(1)"></div>
     <div class="click" id="a-click" (touchstart)="touchStick($event)" (touchend)="touchEndStick($event)" (touchmove)="pullStick($event)"></div>
-    <div class="left" (touchstart)="move(-1, 0)"></div>
-    <div class="right" (touchstart)="move(1, 0)"></div>
+    <div class="left" (touchstart)="holdMoveStart(2, -1, 0);" (touchend)="holdMoveStop(2)"></div>
+    <div class="right" (touchstart)="holdMoveStart(3, 1, 0);" (touchend)="holdMoveStop(3)"></div>
   </div>
 
   <div id="attack-controls" class="controls">
