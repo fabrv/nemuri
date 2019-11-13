@@ -43,10 +43,14 @@
   </div>
   <div *ngIf="mainMenu" class="overlay" id="main-menu">
     <ul>
-        <li><h1 style="font-size: 40px" class="gothic">Okite</h1></li>
+        <li><h1 style="font-size: 40px">Okite</h1></li>
       <li *ngIf="gameCreated" (click)="loadGame()"><a>Continue game</a></li>
       <li><a (click)="createGame()">New game</a></li>
     </ul>
+  </div>
+
+  <div id="wave-hud">
+    tekis: {{enemies}} | time to next wave: {{nextWaveSeconds}}
   </div>
 
   <div id="move-controls" class="controls">

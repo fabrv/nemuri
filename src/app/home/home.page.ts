@@ -1,8 +1,6 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { ScreenOrientation } from '@ionic-native/screen-orientation/ngx';
 
-import { TaskTimer, Task } from 'tasktimer'
-
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
@@ -42,8 +40,17 @@ export class HomePage {
   drawLoopInterval: any
 
   lifes = 4
+  enemies = 0
+  nextWave = 10000
+  nextWaveSeconds = Math.round(this.nextWave / 1000)
+  waveLength = 60000
 
   muteText: string = "Mute"
+
+  drawEnemiesB: boolean = false
+
+  level: number = 0
+  winsong: boolean = false
 
   muteUnmute () {
     if (this.backgroundMusic.sound.volume == 0.5) {
@@ -131,6 +138,28 @@ export class HomePage {
     const pContext: CanvasRenderingContext2D = pCanvas.getContext('2d')
 
     const draw = () => {
+      this.nextWave = this.mod(this.nextWave - 30, this.waveLength)
+      this.nextWaveSeconds = Math.round(this.nextWave / 1000)
+
+      if (this.nextWave < 30) {
+        this.waveLength += 5000
+
+        console.log(this.nextWave)
+        this.drawEnemies(5 + this.level)
+        this.backgroundMusic.sound.src = '/assets/music/09battle2.wav'
+        this.backgroundMusic.sound.play()
+
+        this.winsong = true
+      }
+
+      if (this.enemies == 0 && this.winsong) {
+        this.backgroundMusic.sound.src = '/assets/music/14levelup1NL.wav'
+        this.backgroundMusic.sound.play()
+        this.level += 2
+
+        this.winsong = false
+      }
+
       pContext.clearRect(0, 0, pCanvas.width, pCanvas.height)
 
       for (let chunk in this.chunks) {
@@ -152,8 +181,6 @@ export class HomePage {
   }
 
   fly = false
-
-  timer = new TaskTimer(200)
 
   constructor(private screenOrientation: ScreenOrientation) {
     this.createChunks()
@@ -208,7 +235,6 @@ export class HomePage {
       this.drawMap()
       this.drawHud()
       this.drawLoop()
-      this.drawEnemies()
 
       this.mainMenu = false
 
@@ -231,7 +257,6 @@ export class HomePage {
       this.drawMap()
       this.drawHud()
       this.drawLoop()
-      this.drawEnemies()
 
       this.mainMenu = false
     }, 10)    
@@ -375,6 +400,7 @@ export class HomePage {
                 enemy.location.y += y * 1.5
                 enemy.life -= 1
                 if (enemy.life == 0) {
+                  this.enemies -= 1
                   currentChunk.chunk[blockPos.y + daggerBlock[0]][blockPos.x + daggerBlock[1]] = 1
                   this.componentsToDraw.splice(this.componentsToDraw.indexOf(enemy), 1)
                   clearInterval(enemy.interval)
@@ -571,6 +597,7 @@ export class HomePage {
   }
 
   drawEnemies (wavesize: number = 10) {
+    this.enemies = wavesize
     const chunkPos = {
       x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
       y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1
