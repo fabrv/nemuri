@@ -17,7 +17,6 @@ export class HomePage {
   gameState: boolean = false
   showHud: number = 0
   gameCreated: boolean = false
-  lastDirection: {x: number, y: number} = {x: 1, y: 0}
 
   mainMenu: boolean = true
   dead: boolean = false
@@ -154,31 +153,31 @@ export class HomePage {
     window.addEventListener('keydown', (event)=> {
       switch (event.keyCode) {
         case 87:
-          this.move(0, 50)
+          this.move(0, 1)
         break
         case 65:
-          this.move(-50, 0)
+          this.move(-1, 0)
         break
         case 83:
-          this.move(0, -50)
+          this.move(0, -1)
         break
         case 68:
-          this.move(50, 0)
+          this.move(1, 0)
         break  
         case 32:
           this.showHud = 0
         break
         case 39:
-          this.throwDagger(8,0)
+          this.throwDagger(1,0)
         break
         case 38:
-          this.throwDagger(0,-8)
+          this.throwDagger(0,-1)
         break
         case 40:
-          this.throwDagger(0,8)
+          this.throwDagger(0,1)
         break
         case 37:
-          this.throwDagger(-8,0)
+          this.throwDagger(-1,0)
           break
         case 27:
           this.pauseMenu = !this.pauseMenu
@@ -300,10 +299,8 @@ export class HomePage {
   }
 
   throwDagger (x: number, y: number) {
-    this.lastDirection.x = (x / x) * Math.sign(x) || 0
-    this.lastDirection.y = (y / y) * Math.sign(y) * -1 || 0
-
-    if (this.lastDirection.x == 0 && this.lastDirection.y == 0) this.lastDirection.x = 1
+    x = x * 8
+    y = y * 8
 
     const canvas: any = document.getElementById('components')
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
@@ -1055,10 +1052,8 @@ export class HomePage {
   }
 
   move (x: number, y: number) {
-    this.lastDirection.x = (x / x) * Math.sign(x) || 0
-    this.lastDirection.y = (y / y) * Math.sign(y) * -1 || 0
-
-    if (this.lastDirection.x == 0 && this.lastDirection.y == 0) this.lastDirection.x = 1
+    x = x * 50
+    y = y * 50
     
     let savedChunks: any
     if (localStorage.getItem(`${this.seed}`)) {
@@ -1163,8 +1158,66 @@ export class HomePage {
     }
   }
 
-  plantTree () {
-    if (this.trees > 0) {
+  controllersP0: any = {}
+  controllersIntervals: any = {}
+  controllersParams: Array<{x: number, y: number}> = [{x: 0, y: 0}, {x: 0, y: 0}]
+  touchStick (event: TouchEvent) {
+    const target: any = event.target
+    const P0 = {x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY}
+    this.controllersP0[`${target.id}`] = P0
+
+    switch (target.id) {
+      case 'a-click':
+          this.controllersIntervals[`${target.id}`] = setInterval(() => {
+            this.move(this.controllersParams[0].x, -this.controllersParams[0].y)
+          }, 200)
+        break
+      case 'b-click':
+          this.controllersIntervals[`${target.id}`] = setInterval(() => {
+            this.plantTree(this.controllersParams[1].x, this.controllersParams[1].y)
+          }, 100)
+        break
+    }
+
+    target.style.transform = `translateX(-50%) translateY(-50%) scale(2)`
+  }
+
+  pullStick (event: TouchEvent) {
+    const target: any = event.target
+    const vector = {
+      x: event.changedTouches[0].clientX - this.controllersP0[`${target.id}`].x,
+      y: event.changedTouches[0].clientY - this.controllersP0[`${target.id}`].y
+    }
+    if (this.distance(event.changedTouches[0].clientX, this.controllersP0[`${target.id}`].x, event.changedTouches[0].clientY, this.controllersP0[`${target.id}`].y) < 100) {
+      target.style.transform = `translateX(calc(${vector.x}px - 50%)) translateY(calc(${vector.y}px - 50%)) scale(2)`
+    }
+
+    const direction = {
+      x: Math.round(vector.x / 50) / Math.round(vector.x / 50) * Math.sign(Math.round(vector.x / 50)) || 0,
+      y: Math.round(vector.y / 50) / Math.round(vector.y / 50) * Math.sign(Math.round(vector.y / 50)) || 0
+    }
+
+    switch (target.id) {
+      case 'a-click':
+        this.controllersParams[0].x = direction.x
+        this.controllersParams[0].y = direction.y
+        break
+      case 'b-click':
+        this.controllersParams[1].x = direction.x
+        this.controllersParams[1].y = direction.y
+        break
+    }
+  }
+  
+  touchEndStick (event: TouchEvent) {
+    const target: any = event.target
+    target.style.transform = `translateX(-50%) translateY(-50%)`
+
+    clearInterval(this.controllersIntervals[`${target.id}`])
+  }
+
+  plantTree (x: number, y: number) {
+    if (this.trees > 0 && Math.abs(x) + Math.abs(y) != 0) {
       const chunkPos = {
         x: Math.floor((this.playerPos.x + (this.dimension * 25))/(this.dimension * 50)), 
         y: (Math.floor((this.playerPos.y + (this.dimension * 25))/(this.dimension * 50))) * -1
@@ -1175,10 +1228,10 @@ export class HomePage {
       }
       const currentChunk = this.chunks.find(chunk => chunk.position.x / (this.dimension * 50) == chunkPos.x && chunk.position.y / (this.dimension * 50) == chunkPos.y)
       
-      if (currentChunk.chunk[pBlockPos.y + this.lastDirection.y][pBlockPos.x + this.lastDirection.x] == 1 || currentChunk.chunk[pBlockPos.y + this.lastDirection.y][pBlockPos.x + this.lastDirection.x] == 15) {
-        if (!(pBlockPos.y + this.lastDirection.y == Math.floor(this.dimension / 2) && pBlockPos.x + this.lastDirection.x == Math.floor(this.dimension / 2))) {
+      if (currentChunk.chunk[pBlockPos.y + y][pBlockPos.x + x] == 1 || currentChunk.chunk[pBlockPos.y + y][pBlockPos.x + x] == 15) {
+        if (!(pBlockPos.y + y == Math.floor(this.dimension / 2) && pBlockPos.x + x == Math.floor(this.dimension / 2))) {
           this.witchSkullSound.play()
-          currentChunk.chunk[pBlockPos.y + this.lastDirection.y][pBlockPos.x + this.lastDirection.x] = 14
+          currentChunk.chunk[pBlockPos.y + y][pBlockPos.x + x] = 14
           this.drawChunk(`canvas${currentChunk.position.x}${currentChunk.position.y}`, currentChunk.chunk)
           this.saveGame(currentChunk)
           this.trees -= 1

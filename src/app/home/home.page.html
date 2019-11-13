@@ -49,19 +49,19 @@
   </div>
 
   <div id="move-controls" class="controls">
-    <div class="up" (tap)="move(0, 50);"></div>
-    <div class="down" (click)="move(0, -50)"></div>
-    <div class="click" (click)="plantTree()" id="a-click"></div>
-    <div class="left" (click)="move(-50, 0)"></div>
-    <div class="right" (click)="move(50, 0)"></div>
+    <div class="up" (touchstart)="move(0, 1);"></div>
+    <div class="down" (touchstart)="move(0, -1)"></div>
+    <div class="click" id="a-click" (touchstart)="touchStick($event)" (touchend)="touchEndStick($event)" (touchmove)="pullStick($event)"></div>
+    <div class="left" (touchstart)="move(-1, 0)"></div>
+    <div class="right" (touchstart)="move(1, 0)"></div>
   </div>
 
   <div id="attack-controls" class="controls">
-    <div class="up" (click)="throwDagger(0,-8)"></div>
-    <div class="down" (click)="throwDagger(0,8)"></div>
-    <div class="click" id="b-click" (click)="showHud = 0"></div>
-    <div class="left" (click)="throwDagger(-8,0)"></div>
-    <div class="right" (click)="throwDagger(8,0)"></div>
+    <div class="up" (touchstart)="throwDagger(0,-1)"></div>
+    <div class="down" (touchstart)="throwDagger(0,1)"></div>
+    <div class="click" id="b-click" (touchstart)="showHud = 0; touchStick($event)" (touchend)="touchEndStick($event)" (touchmove)="pullStick($event)"></div>
+    <div class="left" (touchstart)="throwDagger(-1,0)"></div>
+    <div class="right" (touchstart)="throwDagger(1,0)"></div>
   </div>
 
   <div id="pause-control" (click)="pauseMenu = true; pauseResume()"></div>
